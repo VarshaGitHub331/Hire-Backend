@@ -3,10 +3,12 @@ module.exports = (sequelize, DataTypes) => {
     gig_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      primaryKey: true,
     },
     category_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      primaryKey: true,
     },
   });
   Gig_Categories.associate = (models) => {

@@ -1,24 +1,8 @@
 "use strict";
-
 const fs = require("fs");
 const path = require("path");
 const Sequelize = require("sequelize");
 const process = require("process");
-const Client = require("./Client");
-const Category = require("./Category");
-const Skills = require("./Skills");
-const Freelancer_Category = require("./Freelancer_Category");
-const Freelancer_Skills = require("./Freelancer_Skills");
-const Gigs = require("./Gigs");
-const { Gig_Categories, User_Messages } = require("../utils/InitializeModels");
-const Gig_Skills = require("./Gig_Skills");
-const Freelancer_Gigs = require("./Freelancer_Gigs");
-const Job_Postings = require("./Job_Postings");
-const Job_Categories = require("./Job_Categories");
-const Job_Skills = require("./Job_Skills");
-const Applicants = require("./Applicants");
-const Bids = require("./Bids");
-const Conversation = require("./Conversation");
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || "development";
 const config = require(__dirname + "/../config/config.json")[env];

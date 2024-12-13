@@ -74,13 +74,7 @@ FreelancerRouter.get(
   WrapAsync(findSimilarSkills),
   WrapAsync(insertFoundSkills)
 );
-FreelancerRouter.get(
-  "/createGigAuto",
-  WrapAsync(CreateGig),
-  WrapAsync(extractSkills),
-  WrapAsync(findSimilarSkills),
-  WrapAsync(AddGigSkills)
-);
+
 FreelancerRouter.post(
   "/recommendCategories",
   WrapAsync(extractSkills),
@@ -97,8 +91,7 @@ FreelancerRouter.post(
   "/makeGig",
   upload.array("gigImages", 5),
   uploadGigMedia,
-  (req, res, next) => {
-    console.log(req.body);
-  }
+  CreateGig,
+  AddGigSkills
 );
 module.exports = FreelancerRouter;

@@ -15,6 +15,7 @@ const {
 const sequelize = require("../utils/Connection.js");
 
 const { raw } = require("mysql2");
+const { Sequelize } = require("../models/index.js");
 if (Gigs !== undefined) {
   console.log("NOT UNDEFINED");
 }
@@ -171,39 +172,126 @@ const insertFoundSkills = async (req, res, next) => {
   res.status(202).json("Inserted extracted skills");
 };
 const CreateGig = async (req, res, next) => {
-  const { title, description, user_id, category_id } = req.body;
-  const gig = await Gigs.create({ title, description, raw: true });
-  console.log("Created a new Gig");
+  let {
+    title,
+    gigCategories,
+    user_id,
+    gigSkills,
+    budget,
+    features,
+    gigDesc,
+    gigFiles,
+  } = req.body;
+  console.log(req.body);
+  // Create the new Gig record
+  if (typeof features === "string") {
+    features = JSON.parse(features);
+  }
+  if (typeof gigSkills === "string") {
+    gigSkills = JSON.parse(gigSkills);
+  }
+  const gig = await Gigs.create(
+    {
+      title,
+      description: gigDesc,
+      picture: gigFiles,
+      budget,
+      features,
+    },
+    { raw: true }
+  );
+  console.log("Created a new Gig ", gig);
 
+  // Create the Freelancer_Gigs association
   const freelancerGig = await Freelancer_Gigs.create({
     gig_id: gig.gig_id,
     user_id,
   });
   console.log("Created freelancer gig");
-  const gigCat = await Gig_Categories.create({
-    gig_id: gig.gig_id,
-    category_id: category_id,
+
+  // Find the category for the gig
+  const category = await Category.findOne({
+    attributes: ["category_id"],
+    where: { category_name: gigCategories },
   });
+
+  // Create the Gig_Categories association
+  if (category) {
+    await Gig_Categories.create({
+      gig_id: gig.gig_id,
+      category_id: category.category_id,
+    });
+    console.log("Created gig category");
+  } else {
+    console.log("Category not found");
+  }
+
+  // Set the gig_id in the request body and proceed to the next middleware
   req.body.gig_id = gig.gig_id;
-  console.log("Created gig category");
-  req.body.extractText = description;
+  req.body.extractText = gigDesc;
   next();
 };
+
 const AddGigSkills = async (req, res, next) => {
-  const skillsToAdd = req.body.extracted_skills;
+  let skillsToAdd = req.body.gigSkills;
+  console.log("Skills to Add:", skillsToAdd);
+
+  // If the skills are passed as a string, try parsing them into an array
+  if (typeof skillsToAdd === "string") {
+    skillsToAdd = JSON.parse(skillsToAdd); // This will convert a stringified array to an array
+  }
+
+  // Ensure skillsToAdd is an array
+  if (!Array.isArray(skillsToAdd)) {
+    return res.status(400).json({ error: "Skills should be an array" });
+  }
+
   const { user_id, gig_id } = req.body;
-  for (let skillToAdd of skillsToAdd) {
-    let skill = await Skills.findOne({
-      attributes: ["skill_id"],
+
+  // Check if gig exists (optional but recommended)
+  const gigExists = await Gigs.findOne({ where: { gig_id } });
+  if (!gigExists) {
+    return res.status(404).json({ error: "Gig not found" });
+  }
+
+  try {
+    // Find the skills in the Skills table
+    const skillRecords = await Skills.findAll({
       where: {
-        skill_name: skillToAdd,
+        skill_name: {
+          [Sequelize.Op.in]: skillsToAdd,
+        },
       },
       raw: true,
     });
-    await Gig_Skills.create({ gig_id, skill_id: skill.skill_id });
-    console.log("Gig skill created");
+
+    console.log("Skill Records Found:", skillRecords);
+
+    // If no skills are found, return an error response
+    if (!skillRecords || skillRecords.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "Skills not found in the database" });
+    }
+
+    // Add each skill to the Gig_Skills table
+    for (const skill of skillRecords) {
+      console.log(skill);
+      await Gig_Skills.create({
+        gig_id,
+        skill_id: skill.skill_id,
+      });
+    }
+
+    // Commit the transaction if all operations are successful
+
+    // Send a success response
+    res.status(200).json("Done populating skills for gig");
+  } catch (error) {
+    console.error("Error adding gig skills:", error);
+    await transaction.rollback(); // Rollback transaction in case of error
+    res.status(500).json({ error: "Internal Server Error" });
   }
-  res.status(200).json("Done populating for gigs");
 };
 
 module.exports = {

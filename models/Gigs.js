@@ -1,36 +1,40 @@
 module.exports = (sequelize, DataTypes) => {
-  const Gigs = sequelize.define(
-    "Gigs",
-    {
-      gig_id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      title: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
-      },
-      description: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
-      },
-      picture: {
-        type: DataTypes.STRING,
-      },
+  const Gigs = sequelize.define("Gigs", {
+    gig_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
     },
-    {
-      tableName: "Gigs",
-    }
-  );
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    budget: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    description: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    picture: {
+      type: DataTypes.JSON, // Store array as JSON
+      allowNull: false,
+    },
+    features: {
+      type: DataTypes.JSON, // Store array as JSON
+      allowNull: false,
+    },
+  });
+
   Gigs.associate = (models) => {
     Gigs.belongsToMany(models.Category, {
       through: "Gig_Categories",
-      foreign_key: "gig_id",
+      foreignKey: "gig_id",
     });
     Gigs.belongsToMany(models.Skills, {
       through: "Gig_Skills",
-      foreign_key: "gig_id",
+      foreignKey: "gig_id",
     });
   };
 

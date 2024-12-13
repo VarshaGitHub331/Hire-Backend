@@ -4,11 +4,21 @@ module.exports = (sequelize, DataTypes) => {
     {
       gig_id: {
         type: DataTypes.INTEGER,
+        primaryKey: true,
         allowNull: false,
+        references: {
+          model: "Gigs",
+          key: "gig_id",
+        },
       },
       skill_id: {
         type: DataTypes.INTEGER,
+        primaryKey: true,
         allowNull: false,
+        references: {
+          model: "Skills",
+          key: "skill_id",
+        },
       },
     },
     {

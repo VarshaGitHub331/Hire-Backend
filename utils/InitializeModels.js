@@ -1,14 +1,5 @@
 const db = require("../models"); // Assuming models are correctly imported
-
-db.sequelize
-  .sync({ force: false })
-  .then(() => {
-    console.log("Database synced successfully!");
-  })
-  .catch((error) => {
-    console.error("Error syncing database:", error);
-  });
-
+db.Gig_Skills.sync({ force: true });
 const {
   User,
   Category,
@@ -18,7 +9,7 @@ const {
   Freelancer_Skills,
   Client,
   Gigs,
-  Gig_Category,
+  Gig_Categories,
   Gig_Skills,
   Freelancer_Gigs,
   Job_Postings,
@@ -42,7 +33,7 @@ module.exports = {
   Freelancer_Skills,
   Client,
   Gigs,
-  Gig_Category,
+  Gig_Categories,
   Gig_Skills,
   Freelancer_Gigs,
   Job_Postings,
