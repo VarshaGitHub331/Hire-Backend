@@ -1,5 +1,5 @@
 const db = require("../models"); // Assuming models are correctly imported
-db.Gig_Skills.sync({ force: true });
+
 const {
   User,
   Category,

@@ -9,6 +9,7 @@ const FreelancerRouter = require("./routes/freelancer.js");
 const ClientRouter = require("./routes/client.js");
 const OrderRouter = require("./routes/order.js");
 const dataRouter = require("./routes/Data.js");
+const gigRouter = require("./routes/gigs.js");
 const Data = require("./routes/Data.js");
 const cors = require("cors");
 // Insert a new user
@@ -36,6 +37,7 @@ app.use("/freelancer", FreelancerRouter);
 app.use("/client", ClientRouter);
 app.use("/order", OrderRouter);
 app.use("/data", dataRouter);
+app.use("/gigs", gigRouter);
 
 server.listen(3001, () => {
   console.log("Server listening at 3001");

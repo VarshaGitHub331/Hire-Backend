@@ -28,12 +28,14 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Gigs.associate = (models) => {
-    Gigs.belongsToMany(models.Category, {
-      through: "Gig_Categories",
+    Gigs.hasOne(models.Gig_Categories, {
       foreignKey: "gig_id",
     });
     Gigs.belongsToMany(models.Skills, {
       through: "Gig_Skills",
+      foreignKey: "gig_id",
+    });
+    Gigs.hasOne(models.Freelancer_Gigs, {
       foreignKey: "gig_id",
     });
   };

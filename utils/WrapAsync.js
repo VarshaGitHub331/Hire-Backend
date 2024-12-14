@@ -4,3 +4,4 @@ const WrapAsync = (func) => {
   };
 };
 module.exports = WrapAsync;
+ 

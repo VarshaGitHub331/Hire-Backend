@@ -270,8 +270,10 @@ const AddGigSkills = async (req, res, next) => {
     // If no skills are found, return an error response
     if (!skillRecords || skillRecords.length === 0) {
       return res
-        .status(404)
-        .json({ error: "Skills not found in the database" });
+        .status(200)
+        .json({
+          error: "Skills not found in the database,insert without skills",
+        });
     }
 
     // Add each skill to the Gig_Skills table
