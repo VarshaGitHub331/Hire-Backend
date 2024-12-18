@@ -200,5 +200,34 @@ const FetchGig = async (req, res, next) => {
     next(e); // Pass any error to the next middleware
   }
 };
+const DeleteGig = async (req, res, next) => {
+  console.log(req.body);
+  const { gig_id } = req.body;
 
-module.exports = { FetchGigs, EditGig, FetchGig };
+  // Validate if gig_id exists in the request
+  if (!gig_id) {
+    return res.status(400).json({ error: "Gig ID is required." });
+  }
+  const deleteGigSkill = await Gig_Skills.destroy({
+    where: { gig_id: gig_id },
+  });
+  const deleteGigCategory = await Gig_Skills.destroy({
+    where: { gig_id: gig_id },
+  });
+  const deleted = await Freelancer_Gigs.destroy({
+    where: {
+      gig_id: gig_id,
+    },
+  });
+  // Find and delete the gig in the database
+  const deletedGig = await Gigs.destroy({ where: { gig_id: gig_id } });
+
+  if (!deletedGig) {
+    return res.status(404).json({ error: "Gig not found." });
+  }
+
+  return res
+    .status(200)
+    .json({ message: "Gig deleted successfully.", gig: deletedGig });
+};
+module.exports = { FetchGigs, EditGig, FetchGig, DeleteGig };
