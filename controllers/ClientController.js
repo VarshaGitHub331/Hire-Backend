@@ -6,13 +6,13 @@ const {
 } = require("../utils/InitializeModels");
 
 const UpdateProfile = async (req, res, next) => {
-  const { contact_number, user_id } = req.body;
+  const { contact_number, user_id, company_name } = req.body;
   if (!user_id) {
     res.status(404).json("User_id cannot be null");
   }
   try {
     const updated = await Client.update(
-      { contact_number },
+      { contact_number, company_name },
       { where: { user_id: user_id } }
     );
     res.status(201).json(updated);

@@ -21,7 +21,8 @@ const {
   Conversation,
   Messages,
   User_Messages,
-  Reviews,
+  Review,
+  Freelancer_Ratings,
 } = db;
 
 module.exports = {
@@ -45,5 +46,6 @@ module.exports = {
   Conversation,
   Messages,
   User_Messages,
-  Reviews,
+  Review,
+  Freelancer_Ratings,
 };

@@ -33,7 +33,7 @@ const RegisterUser = async (req, res, next) => {
         profile: " ",
         cost: 0,
       });
-    } else if (role === "company") {
+    } else if (role === "client") {
       const { company_name } = req.body;
       const newClient = await Client.create({
         user_id: newUser.user_id,
