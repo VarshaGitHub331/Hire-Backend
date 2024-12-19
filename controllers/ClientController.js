@@ -110,6 +110,7 @@ const RemovePosting = async (req, res, next) => {
     next(e);
   }
 };
+
 module.exports = {
   UpdateClientProfile: UpdateProfile,
   CreatePosting,

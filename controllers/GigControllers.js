@@ -7,6 +7,8 @@ const {
   Gig_Skills,
   Category,
   Skills,
+  Freelancer_Ratings,
+  User,
 } = require("../utils/InitializeModels");
 
 const FetchGigs = async (req, res, next) => {
@@ -230,4 +232,85 @@ const DeleteGig = async (req, res, next) => {
     .status(200)
     .json({ message: "Gig deleted successfully.", gig: deletedGig });
 };
-module.exports = { FetchGigs, EditGig, FetchGig, DeleteGig };
+
+const FetchAllGigs = async (req, res, next) => {
+  const { page, limit } = req.body;
+  const pageNumber = parseInt(page) || 1; // Default to 1 if no page is provided
+  const limitNumber = parseInt(limit) || 3; // Default to 3 if no limit is provided
+  const offset = (page - 1) * limit;
+  const results = [];
+  try {
+    const gigResults = await Gigs.findAll({
+      include: [
+        {
+          model: Freelancer_Gigs,
+          attributes: ["user_id"],
+        },
+        {
+          model: Gig_Categories,
+          attributes: ["category_id"],
+        },
+      ],
+      raw: true,
+      offset: offset, // Apply offset for pagination
+      limit: limitNumber, // Apply limit
+    });
+    console.log(gigResults);
+    for (let gig of gigResults) {
+      const skillResult = await Gigs.findAll({
+        include: [
+          {
+            model: Skills,
+            attributes: [
+              [
+                sequelize.fn(
+                  "GROUP_CONCAT",
+                  sequelize.col("Skills.skill_name")
+                ),
+                "skill_names",
+              ],
+            ],
+            through: {
+              attributes: [], // No additional attributes from the join table
+            },
+          },
+        ],
+        where: { gig_id: gig.gig_id },
+        raw: true,
+        group: ["Gigs.gig_id"], // Ensure grouping by gig_id
+        attributes: [],
+      });
+      const categoryName = await Category.findOne({
+        where: { category_id: gig["Gig_Category.category_id"] },
+        attributes: ["category_name"],
+        raw: true,
+      });
+      const freelancer = await User.findOne({
+        where: { user_id: gig["Freelancer_Gig.user_id"] },
+        attributes: ["first_name"],
+        raw: true,
+      });
+      const freelancerRating = await Freelancer_Ratings.findOne({
+        where: {
+          freelancer_id: gig["Freelancer_Gig.user_id"], // Adjust this based on how gig object is structured
+        },
+        attributes: ["total_rating", "rating_count"], // Correct the typo here
+        raw: true, // Keep raw if you want a plain object response
+      });
+
+      console.log(skillResult);
+      console.log(categoryName.category_name);
+      gig.category_name = categoryName.category_name;
+      gig.skills_names = skillResult[0]["Skills.skill_names"];
+      gig.freelancer_name = freelancer.first_name;
+      gig.freelancer_rating =
+        freelancerRating?.total_rating / freelancerRating?.rating_count;
+      results.push(gig);
+    }
+    console.log(results);
+    res.status(200).json(results);
+  } catch (e) {
+    next(e); // Pass any error to the next middleware
+  }
+};
+module.exports = { FetchGigs, EditGig, FetchGig, DeleteGig, FetchAllGigs };
