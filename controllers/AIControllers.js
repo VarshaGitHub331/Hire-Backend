@@ -153,10 +153,65 @@ Craft the most optimized and compelling gig title possible. Return only the titl
     return null;
   }
 };
+const extractClientRequirements = async (req, res, next) => {
+  const clientText = req.body.clientText;
+  const prompt = `
+  You are an AI trained to extract requirements from a client's gig request from a freelancing platform. 
+  Please extract the requirements in the following strict JSON format with no additional explanation:
+
+  {
+    "skills": ["skill1", "skill2"],
+    "budget": <budget_value>
+  }
+
+  Text: "${clientText}"
+
+  Provide the output ONLY in the format above, no extra text.
+  `;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "meta/llama-3.1-405b-instruct", // Ensure the model name matches your API
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.0, // Deterministic output
+      top_p: 1.0, // Consider all relevant tokens
+      max_tokens: 150, // Increase max_tokens to accommodate both skills and budget
+    });
+
+    // Log the raw AI response to inspect it
+    const responseContent = completion.choices[0]?.message?.content.trim();
+    console.log("Raw AI response:", responseContent);
+
+    // Remove any leading text (e.g., "Here are the extracted requirements:")
+    const jsonContent = responseContent.replace(
+      /^Here are the extracted requirements:\s*/,
+      ""
+    );
+
+    // Parse the cleaned JSON content
+    const extractedData = JSON.parse(jsonContent);
+
+    // Assign the extracted skills and budget to the request body
+    req.body.skills = extractedData.skills || [];
+    req.body.budget = extractedData.budget || null;
+
+    console.log("Extracted Skills:", req.body.skills);
+    console.log("Extracted Budget:", req.body.budget);
+
+    next();
+  } catch (error) {
+    console.error("Error extracting requirements:", error);
+    return res
+      .status(500)
+      .json({ error: "Internal server error while extracting requirements." });
+  }
+};
+
 module.exports = {
   extractSkills,
   findSimilarSkills,
   findSimilarCategories,
   extractGigTitle,
+  extractClientRequirements,
 };
 // Example usage

@@ -234,10 +234,11 @@ const DeleteGig = async (req, res, next) => {
 };
 
 const FetchAllGigs = async (req, res, next) => {
-  const { page, limit } = req.body;
+  console.log(req.query);
+  const { page, limit } = req.query;
   const pageNumber = parseInt(page) || 1; // Default to 1 if no page is provided
   const limitNumber = parseInt(limit) || 3; // Default to 3 if no limit is provided
-  const offset = (page - 1) * limit;
+  const offset = (pageNumber - 1) * limit;
   const results = [];
   try {
     const gigResults = await Gigs.findAll({
@@ -249,11 +250,25 @@ const FetchAllGigs = async (req, res, next) => {
         {
           model: Gig_Categories,
           attributes: ["category_id"],
+          include: [
+            {
+              model: Category,
+              attributes: ["category_name"],
+            },
+          ],
         },
       ],
       raw: true,
       offset: offset, // Apply offset for pagination
       limit: limitNumber, // Apply limit
+      order: [
+        [
+          { model: Gig_Categories },
+          { model: Category },
+          "category_name",
+          "ASC",
+        ],
+      ], // Order by category_name in ascending order
     });
     console.log(gigResults);
     for (let gig of gigResults) {
