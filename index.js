@@ -10,8 +10,10 @@ const ClientRouter = require("./routes/client.js");
 const OrderRouter = require("./routes/order.js");
 const dataRouter = require("./routes/Data.js");
 const gigRouter = require("./routes/gigs.js");
+const conversationRouter = require("./routes/Conversation.js");
 const Data = require("./routes/Data.js");
 const cors = require("cors");
+const Conversation = require("./models/Conversation.js");
 // Insert a new user
 /*async function createNewUser() {
   try {
@@ -38,7 +40,7 @@ app.use("/client", ClientRouter);
 app.use("/order", OrderRouter);
 app.use("/data", dataRouter);
 app.use("/gigs", gigRouter);
-
+app.use("/conversation", conversationRouter);
 server.listen(3001, () => {
   console.log("Server listening at 3001");
 });

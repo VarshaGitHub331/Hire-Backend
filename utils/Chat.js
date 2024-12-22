@@ -11,6 +11,7 @@ io.on("connection", (socket) => {
     try {
       const existConversation = await Conversation.findOne({
         where: { buyerId, sellerId },
+        raw: true,
       });
       if (existConversation) {
         conversation_id = existConversation.conversation_id;
