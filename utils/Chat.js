@@ -7,16 +7,17 @@ const {
 io.on("connection", (socket) => {
   console.log("A new user joined");
   let conversation_id;
-  socket.on("joinConversation", async ({ orderId }) => {
+  socket.on("joinConversation", async ({ buyerId, sellerId }) => {
     try {
       const existConversation = await Conversation.findOne({
-        where: { order_id: orderId },
+        where: { buyerId, sellerId },
       });
       if (existConversation) {
         conversation_id = existConversation.conversation_id;
       } else {
         const newConversation = await Conversation.create({
-          order_id: orderId,
+          buyerId,
+          sellerId,
         });
         conversation_id = newConversation.conversation_id;
       }

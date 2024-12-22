@@ -8,12 +8,20 @@ module.exports = (sequelize, DataTypes) => {
         autoIncrement: true,
         primaryKey: true,
       },
-      order_id: {
+      buyer_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-          model: "orders",
-          key: "order_id",
+          model: "Client",
+          key: "user_id",
+        },
+      },
+      seller_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: "Freelancer",
+          key: "user_id",
         },
       },
     },
@@ -23,8 +31,12 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
   Conversation.associate = (models) => {
-    Conversation.belongsTo(models.Order, {
-      foreign_key: "order_id",
+    Conversation.belongsTo(models.Freelancer, {
+      foreign_key: "seller_id",
+      constraints: true,
+    });
+    Conversation.belongsTo(models.Client, {
+      foreign_key: "buyer_id",
       constraints: true,
     });
   };
