@@ -55,24 +55,50 @@ const RegisterUser = async (req, res, next) => {
   }
 };
 const LoginUser = async (req, res, next) => {
+  console.log("called login");
   const { email, password } = req.body;
+
   try {
-    const user = await User.findOne({ where: { email } });
+    // Find the user by email
+    const user = await User.findOne({
+      where: { email: "varsha@sud" },
+      attributes: [
+        "user_id",
+        "email",
+        "first_name",
+        "last_name",
+        "password",
+        "role",
+        "created_at",
+        "updated_at",
+      ],
+      raw: true,
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" }); // Avoid revealing if user exists
+    }
+
+    // Compare the password
     const isValid = await bcrypt.compare(password, user.password);
+    console.log(user);
     if (isValid) {
+      // Generate JWT token
       const token = jwt.sign(
         { user_id: user.user_id, user_name: user.first_name, role: user.role },
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
       );
-      res.status(200).json(token);
+      return res.status(200).json({ token });
     } else {
-      res.status(404).json({ isValid: "Auth Fail" });
+      return res.status(401).json({ error: "Invalid credentials" }); // Generic error message
     }
   } catch (e) {
-    next(e);
+    console.error("Login error:", e); // Log the actual error for debugging
+    return next(e); // Pass error to error handling middleware
   }
 };
+
 const AuthUser = async (req, res, next) => {
   const token = req.header("Authorization").split(" ")[1];
   console.log(token);

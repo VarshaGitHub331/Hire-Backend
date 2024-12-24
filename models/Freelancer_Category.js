@@ -28,10 +28,10 @@ module.exports = (sequelize, DataTypes) => {
   );
   Freelancer_Category.associate = (models) => {
     Freelancer_Category.belongsTo(models.User, {
-      foreign_key: "user_id",
+      foreignKey: "user_id",
     });
     Freelancer_Category.belongsTo(models.Category, {
-      foreign_key: "category_id",
+      foreignKey: "category_id",
     });
   };
   return Freelancer_Category;

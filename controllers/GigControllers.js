@@ -320,6 +320,7 @@ const FetchAllGigs = async (req, res, next) => {
       gig.freelancer_name = freelancer.first_name;
       gig.freelancer_rating =
         freelancerRating?.total_rating / freelancerRating?.rating_count;
+      gig.freelancer_id = gig["Freelancer_Gig.user_id"];
       results.push(gig);
     }
     console.log(results);

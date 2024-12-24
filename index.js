@@ -1,9 +1,41 @@
 const express = require("express");
 const socketIo = require("socket.io");
 const http = require("http");
+const cors = require("cors");
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+
+// Set up Socket.IO with CORS support for cross-origin requests
+const io = require("socket.io")(server, {
+  cors: {
+    origin: "http://localhost:3000", // Frontend origin
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+    credentials: true,
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("A client connected:", socket.id);
+});
+
+console.log("Socket.IO server is running on port 3001");
+
+// CORS setup for Express HTTP routes - Allow all HTTP methods
+const corsOptions = {
+  origin: "http://localhost:3000", // Allow only requests from this origin
+  methods: "*", // Allow all HTTP methodsWWW
+  credentials: true, // Enable credentials for HTTP requests
+};
+
+// Apply CORS middleware for Express routes
+app.use(cors(corsOptions));
+
+// Middleware for parsing incoming JSON and URL-encoded data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Importing and using routes
 const UserRouter = require("./routes/user.js");
 const FreelancerRouter = require("./routes/freelancer.js");
 const ClientRouter = require("./routes/client.js");
@@ -11,29 +43,7 @@ const OrderRouter = require("./routes/order.js");
 const dataRouter = require("./routes/Data.js");
 const gigRouter = require("./routes/gigs.js");
 const conversationRouter = require("./routes/Conversation.js");
-const Data = require("./routes/Data.js");
-const cors = require("cors");
-const Conversation = require("./models/Conversation.js");
-// Insert a new user
-/*async function createNewUser() {
-  try {
-    const newUser = await User.create({
-      email: "new4@example.com",
-      first_name: "John",
-      last_name: "Doe",
-      password: "securepassword123", // In a real app, ensure this is hashed!
-      role: "freelancer",
-    });
-    console.log("User created:", newUser);
-  } catch (error) {
-    console.error("Error inserting new user:", error);
-  }
-}
-createNewUser();*/
-// Call the function
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
 app.use("/user", UserRouter);
 app.use("/freelancer", FreelancerRouter);
 app.use("/client", ClientRouter);
@@ -41,7 +51,11 @@ app.use("/order", OrderRouter);
 app.use("/data", dataRouter);
 app.use("/gigs", gigRouter);
 app.use("/conversation", conversationRouter);
+
+// Start the server
 server.listen(3001, () => {
-  console.log("Server listening at 3001");
+  console.log("Server listening at http://localhost:3001");
 });
-module.exports = { io };
+
+module.exports = { io }; // Exporting io for use in other parts of your application
+require("./utils/Chat.js");

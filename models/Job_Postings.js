@@ -10,76 +10,69 @@ module.exports = (sequelize, DataTypes) => {
       },
       user_id: {
         type: DataTypes.INTEGER,
-        allowNull: true, // This field can be null
+        allowNull: true, // This field can be null (if referencing Client)
         references: {
-          model: "Client", // Assuming there is a 'Users' table
+          model: "Client", // Assuming the reference is to Client model
           key: "user_id",
         },
       },
       title: {
         type: DataTypes.STRING(255),
-        allowNull: true, // This field can be null
+        allowNull: true,
       },
       description: {
         type: DataTypes.TEXT,
-        allowNull: true, // This field can be null
+        allowNull: true,
       },
-
       budget: {
         type: DataTypes.DECIMAL(10, 2),
-        allowNull: true, // This field can be null
+        allowNull: true,
       },
       location: {
         type: DataTypes.STRING(255),
-        allowNull: true, // This field can be null
+        allowNull: true,
       },
       duration: {
         type: DataTypes.STRING(255),
-        allowNull: true, // This field can be null
-      },
-      created_at: {
-        type: DataTypes.DATE,
         allowNull: true,
-        defaultValue: DataTypes.NOW, // Default value is the current timestamp
       },
       status: {
         type: DataTypes.ENUM("True", "False"),
         allowNull: false,
       },
-      updated_at: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        defaultValue: DataTypes.NOW, // Default value is the current timestamp
-      },
     },
     {
-      timestamps: true, // Enables automatic tracking of createdAt and updatedAt
+      timestamps: true,
       createdAt: "created_at",
       updatedAt: "updated_at",
-      tableName: "Job_Postings", // Specifies the table name as 'job_postings'
+      tableName: "Job_Postings",
     }
   );
 
   Job_Postings.associate = (models) => {
-    // Association with Users (assuming a user creates the job posting)
-    Job_Postings.belongsTo(models.User, {
+    // Assuming 'user_id' refers to 'Client' model
+    Job_Postings.belongsTo(models.Client, {
       foreignKey: "user_id",
     });
-    // Association with Categories (assuming jobs are categorized)
+
+    // Job-Category and Job-Skill associations
     Job_Postings.belongsToMany(models.Skills, {
-      through: "Job_Skills",
+      through: "job_skills",
       foreignKey: "job_id",
     });
     Job_Postings.belongsToMany(models.Category, {
-      through: "Job_Categories",
+      through: "job_categories",
       foreignKey: "job_id",
     });
+
+    // Associations with 'Order' and 'Bids' using 'job_id' foreign key
     Job_Postings.hasOne(models.Order, {
-      foreignKey: "job_posting_id", // Foreign key in the Orders table
-      as: "order", // Optional alias
+      foreignKey: "job_id", // Foreign key in Orders table
+      as: "order",
     });
+
     Job_Postings.hasMany(models.Bids, {
-      foreignKey: "job_posting_id",
+      foreignKey: "job_id", // Foreign key in Bids table
       as: "bid",
     });
   };

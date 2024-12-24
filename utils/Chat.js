@@ -6,30 +6,35 @@ const {
 } = require("./InitializeModels.js");
 io.on("connection", (socket) => {
   console.log("A new user joined");
+  console.log(socket.id);
   let conversation_id;
   socket.on("joinConversation", async ({ buyerId, sellerId }) => {
+    console.log("Here");
+    console.log(buyerId);
+    console.log(sellerId);
     try {
       const existConversation = await Conversation.findOne({
-        where: { buyerId, sellerId },
+        where: { buyer_id: buyerId, seller_id: sellerId },
         raw: true,
       });
-      if (existConversation) {
+      console.log(existConversation);
+      if (existConversation != null) {
+        console.log("Conversation exists");
         conversation_id = existConversation.conversation_id;
       } else {
         const newConversation = await Conversation.create({
-          buyerId,
-          sellerId,
+          buyer_id: buyerId,
+          seller_id: sellerId,
         });
         conversation_id = newConversation.conversation_id;
       }
       const loadedMessages = await Messages.findAll({
         where: { conversation_id: conversation_id },
         order: [["sent_at", "ASC"]],
+        raw: true,
       });
       socket.join(conversation_id);
-      if (loadedMessages) {
-        socket.emit("loadingMessages", { loadedMessages, conversation_id });
-      }
+      socket.emit("loadingMessages", { loadedMessages, conversation_id });
     } catch (e) {
       console.log(e);
     }
@@ -41,12 +46,13 @@ io.on("connection", (socket) => {
         conversation_id: data.conversationId,
         sender_id: data.senderId, // The ID of the user sending the message
         message: data.message,
+        receiver_id: data.receiverId,
         status: "not_read",
         // If you have file uploads, you can include that as well
         file_url: data.fileUrl || null,
         sent_at: new Date(), // Set the current time
       });
-      io.to(data.conversation_id).emit("recieveMessage", newMessage);
+      io.to(data.conversationId).emit("receiveMessage", newMessage);
     } catch (e) {
       console.log(e);
     }

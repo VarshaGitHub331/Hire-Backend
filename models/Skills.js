@@ -39,7 +39,7 @@ module.exports = (sequelize, DataTypes) => {
     });
     Skills.belongsToMany(models.User, {
       through: "User",
-      foreignKey: "user_id",
+      foreignKey: "skill_id",
     });
     Skills.belongsToMany(models.Gigs, {
       through: "Gig_Skills",

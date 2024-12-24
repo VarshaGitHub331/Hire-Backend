@@ -32,11 +32,11 @@ module.exports = (sequelize, DataTypes) => {
   );
   Conversation.associate = (models) => {
     Conversation.belongsTo(models.Freelancer, {
-      foreign_key: "seller_id",
+      foreignKey: "seller_id",
       constraints: true,
     });
     Conversation.belongsTo(models.Client, {
-      foreign_key: "buyer_id",
+      foreignKey: "buyer_id",
       constraints: true,
     });
   };
