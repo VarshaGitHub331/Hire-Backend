@@ -12,6 +12,7 @@ const {
   Order,
   Review,
   Freelancer_Gigs,
+  Freelancer_Category,
   Freelancer_Ratings,
   Gig_Categories,
   Job_Postings,
@@ -22,10 +23,8 @@ const {
   User_Messages,
   Bids,
   Applicants,
+  Freelancer_Skills,
 } = db;
-
-// Sync all models (with force: true to drop and recreate tables)
-// WARNING: This will drop existing tables and recreate them.
 
 module.exports = {
   User,

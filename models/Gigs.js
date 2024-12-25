@@ -21,9 +21,33 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.JSON, // Store array as JSON
       allowNull: false,
     },
+    duration: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    revisions: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     features: {
       type: DataTypes.JSON, // Store array as JSON
       allowNull: false,
+    },
+    standard_budget: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    advanced_budget: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    standard_features: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
+    advanced_features: {
+      type: DataTypes.JSON,
+      allowNull: true,
     },
   });
 

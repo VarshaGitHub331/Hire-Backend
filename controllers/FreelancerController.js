@@ -181,6 +181,12 @@ const CreateGig = async (req, res, next) => {
     features,
     gigDesc,
     gigFiles,
+    standard_budget,
+    advanced_budget,
+    duration,
+    revisions,
+    standard_features,
+    advanced_features,
   } = req.body;
   console.log(req.body);
   // Create the new Gig record
@@ -197,6 +203,12 @@ const CreateGig = async (req, res, next) => {
       picture: gigFiles,
       budget,
       features,
+      standard_budget,
+      advanced_budget,
+      standard_features,
+      advanced_features,
+      duration,
+      revisions,
     },
     { raw: true }
   );
@@ -269,11 +281,9 @@ const AddGigSkills = async (req, res, next) => {
 
     // If no skills are found, return an error response
     if (!skillRecords || skillRecords.length === 0) {
-      return res
-        .status(200)
-        .json({
-          error: "Skills not found in the database,insert without skills",
-        });
+      return res.status(200).json({
+        error: "Skills not found in the database,insert without skills",
+      });
     }
 
     // Add each skill to the Gig_Skills table
