@@ -1,4 +1,5 @@
 const { io } = require("../index.js");
+const { Sequelize } = require("../models/index.js");
 const {
   Conversation,
   Messages,
@@ -68,6 +69,30 @@ io.on("connection", (socket) => {
       console.log(e);
     }
   });
+  socket.on("markMessagesAsRead", async ({ conversationId, messageIds }) => {
+    console.log(conversationId);
+    console.log(messageIds);
+    try {
+      // Update messages in the database
+      await Messages.update(
+        { status: "read" },
+        {
+          where: {
+            message_id: {
+              [Sequelize.Op.in]: messageIds,
+            },
+            conversation_id: conversationId,
+          },
+        }
+      );
+
+      // Notify the sender about the read status
+      socket.to(conversationId).emit("messagesMarkedAsRead", messageIds);
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("A user disconnected");
   });
