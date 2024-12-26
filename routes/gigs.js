@@ -6,10 +6,12 @@ const {
   FetchGig,
   DeleteGig,
   FetchAllGigs,
+  EditFeauturesBudget,
 } = require("../controllers/GigControllers");
 const {
   extractClientRequirements,
   findSimilarCategories,
+  getFeatures,
 } = require("../controllers/AIControllers.js");
 const WrapAsync = require("../utils/WrapAsync.js");
 const { extractSkills } = require("../controllers/AIControllers.js");
@@ -22,5 +24,11 @@ gigRouter.get(
   "/tailoredGigs",
   WrapAsync(extractClientRequirements),
   WrapAsync(findSimilarCategories)
+);
+gigRouter.post("/aiFeatures", WrapAsync(getFeatures));
+gigRouter.put(
+  "/editFeaturesBudget",
+  WrapAsync(EditFeauturesBudget),
+  WrapAsync(FetchGig)
 );
 module.exports = gigRouter;

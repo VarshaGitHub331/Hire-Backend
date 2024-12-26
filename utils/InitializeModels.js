@@ -31,6 +31,8 @@ module.exports = {
   Freelancer,
   Client,
   Category,
+  Freelancer_Category,
+  Freelancer_Skills,
   Skills,
   Gigs,
   Gig_Skills,

@@ -329,4 +329,42 @@ const FetchAllGigs = async (req, res, next) => {
     next(e); // Pass any error to the next middleware
   }
 };
-module.exports = { FetchGigs, EditGig, FetchGig, DeleteGig, FetchAllGigs };
+const EditFeauturesBudget = async (req, res, next) => {
+  const {
+    gig_id,
+    standard_features,
+    advanced_features,
+    standard_budget,
+    advanced_budget,
+  } = req.body;
+  console.log(req.body);
+
+  try {
+    // Update the gig features and budget
+    const [updatedRowsCount] = await Gigs.update(
+      {
+        standard_features,
+        advanced_features,
+        standard_budget,
+        advanced_budget,
+      },
+      {
+        where: { gig_id },
+      }
+    );
+
+    next();
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = {
+  FetchGigs,
+  EditGig,
+  FetchGig,
+  DeleteGig,
+  FetchAllGigs,
+  EditFeauturesBudget,
+};

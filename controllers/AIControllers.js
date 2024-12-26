@@ -207,11 +207,70 @@ const extractClientRequirements = async (req, res, next) => {
   }
 };
 
+// API endpoint for generating features
+const getFeatures = async (req, res) => {
+  console.log("Request body:", req.body);
+  const { level, basic_features, title, standard_features } = req.body;
+
+  // Construct the prompt
+  const prompt = `
+    You are an AI trained to suggest advanced or standard features for a gig based on provided features and level.
+    - For generating standard features, use the basic features as input.
+    - For generating advanced features, use both standard and basic features as input.
+    - Ensure clear demarcation between levels and provide only 3 features as a valid JavaScript array.
+    - The output should be a JavaScript array like this: ["feature1", "feature2", "feature3"].
+    - Do not include any extra text, explanations, or formatting, only the array.
+
+    Title: "${title}"
+    Level: "${level}"
+    Basic Features: "${basic_features}"
+    Standard Features:"${standard_features}"
+  `;
+
+  try {
+    // Make the API call to OpenAI
+    const completion = await openai.chat.completions.create({
+      model: "meta/llama-3.1-405b-instruct", // Replace with the appropriate model
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.0,
+      top_p: 1.0,
+      max_tokens: 150, // Adjust token limit as needed
+    });
+
+    // Extract the response content
+    const responseContent = completion.choices[0]?.message?.content.trim();
+    console.log("AI Response:", responseContent);
+
+    // Attempt to parse the response as JSON
+    let featuresArray;
+    try {
+      featuresArray = JSON.parse(responseContent);
+      if (!Array.isArray(featuresArray)) {
+        throw new Error("Response is not an array");
+      }
+    } catch (parseError) {
+      console.error("Parsing error:", parseError.message);
+      return res.status(500).json({
+        error: "Invalid response format from AI. Please try again.",
+      });
+    }
+
+    // Send the validated array to the frontend
+    return res.status(200).json({ features: featuresArray });
+  } catch (error) {
+    console.error("Error generating features:", error.message);
+    res
+      .status(500)
+      .json({ error: "Feature generation failed. Please try again." });
+  }
+};
+
 module.exports = {
   extractSkills,
   findSimilarSkills,
   findSimilarCategories,
   extractGigTitle,
   extractClientRequirements,
+  getFeatures,
 };
 // Example usage
