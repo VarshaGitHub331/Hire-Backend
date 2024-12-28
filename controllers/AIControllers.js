@@ -155,6 +155,9 @@ Craft the most optimized and compelling gig title possible. Return only the titl
 };
 const extractClientRequirements = async (req, res, next) => {
   const clientText = req.body.clientText;
+  if (!clientText) {
+    next();
+  }
   const prompt = `
   You are an AI trained to extract requirements from a client's gig request from a freelancing platform. 
   Please extract the requirements in the following strict JSON format with no additional explanation:
@@ -190,13 +193,13 @@ const extractClientRequirements = async (req, res, next) => {
 
     // Parse the cleaned JSON content
     const extractedData = JSON.parse(jsonContent);
-
+    console.log("The data extracted is ", extractedData);
     // Assign the extracted skills and budget to the request body
     req.body.skills = extractedData.skills || [];
-    req.body.budget = extractedData.budget || null;
+    req.body.extracted_budget = extractedData.budget || null;
 
     console.log("Extracted Skills:", req.body.skills);
-    console.log("Extracted Budget:", req.body.budget);
+    console.log("Extracted Budget:", req.body.extracted_budget);
 
     next();
   } catch (error) {
@@ -264,7 +267,47 @@ const getFeatures = async (req, res) => {
       .json({ error: "Feature generation failed. Please try again." });
   }
 };
-
+const extractCategoriesForTailoredGigs = async (req, res, next) => {
+  if (!req.body.skills) next();
+  console.log("The most similar skill is ", req.body.most_similar_skill);
+  const fetchedSkills = req.body.skills;
+  const dbSkills = await Skills.findAll({
+    attributes: ["skill_id", "skill_name"],
+    raw: true,
+  });
+  const textCategories = [];
+  for (let s of dbSkills) {
+    textCategories.push(s.skill_name);
+  }
+  const response = await fetch("http://127.0.0.1:5000/extract_skills", {
+    method: "POST",
+    body: JSON.stringify({
+      generated_skills: fetchedSkills,
+      db_skills: textCategories,
+    }),
+    headers: { "Content-type": "application/json" },
+  });
+  const data = await response.json();
+  console.log(data);
+  const extracted_categories = [];
+  for (let s of data.extracted_skills) {
+    let c = await Skills.findOne({
+      attributes: ["category_id"],
+      where: { skill_name: s },
+      raw: true,
+    });
+    console.log(c);
+    let catName = await Category.findOne({
+      attributes: ["category_name"],
+      where: { category_id: c.category_id },
+      raw: true,
+    });
+    if (!extracted_categories.find((c) => c == catName.category_name))
+      extracted_categories.push(catName.category_name);
+  }
+  req.body.extracted_categories = extracted_categories;
+  next();
+};
 module.exports = {
   extractSkills,
   findSimilarSkills,
@@ -272,5 +315,6 @@ module.exports = {
   extractGigTitle,
   extractClientRequirements,
   getFeatures,
+  extractCategoriesForTailoredGigs,
 };
 // Example usage

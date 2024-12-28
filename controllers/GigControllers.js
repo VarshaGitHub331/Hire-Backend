@@ -10,6 +10,7 @@ const {
   Freelancer_Ratings,
   User,
 } = require("../utils/InitializeModels");
+const { Sequelize } = require("../models");
 
 const FetchGigs = async (req, res, next) => {
   console.log(req.query);
@@ -237,9 +238,12 @@ const FetchAllGigs = async (req, res, next) => {
   console.log(req.query);
   const { page, limit } = req.query;
   const pageNumber = parseInt(page) || 1; // Default to 1 if no page is provided
-  const limitNumber = parseInt(limit) || 3; // Default to 3 if no limit is provided
+  const limitNumber = parseInt(limit) || 3; // Default to 3 if no limit \is provided
   const offset = (pageNumber - 1) * limit;
+  const { extracted_categories, extracted_budget } = req.body;
+  console.log("eXTRACTED CATS", extracted_categories);
   const results = [];
+
   try {
     const gigResults = await Gigs.findAll({
       include: [
@@ -250,6 +254,7 @@ const FetchAllGigs = async (req, res, next) => {
         {
           model: Gig_Categories,
           attributes: ["category_id"],
+
           include: [
             {
               model: Category,
@@ -323,8 +328,8 @@ const FetchAllGigs = async (req, res, next) => {
       gig.freelancer_id = gig["Freelancer_Gig.user_id"];
       results.push(gig);
     }
-    console.log(results);
-    res.status(200).json(results);
+
+    res.status(200).json({ results, extracted_categories, extracted_budget });
   } catch (e) {
     next(e); // Pass any error to the next middleware
   }
