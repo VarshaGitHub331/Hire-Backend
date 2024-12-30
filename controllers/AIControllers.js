@@ -155,21 +155,23 @@ Craft the most optimized and compelling gig title possible. Return only the titl
 };
 const extractClientRequirements = async (req, res, next) => {
   const clientText = req.body.clientText;
+
   if (!clientText) {
-    next();
+    return next(); // Proceed to the next middleware if no client text is provided
   }
+
   const prompt = `
-  You are an AI trained to extract requirements from a client's gig request from a freelancing platform. 
-  Please extract the requirements in the following strict JSON format with no additional explanation:
+    You are an AI trained to extract requirements from a client's gig request from a freelancing platform. 
+    Please **ONLY** extract the requirements in the following strict JSON format with no additional explanation or text:
 
-  {
-    "skills": ["skill1", "skill2"],
-    "budget": <budget_value>
-  }
+    {
+      "skills": ["skill1", "skill2"],
+      "budget": <budget_value>
+    }
 
-  Text: "${clientText}"
+    Text: "${clientText}"
 
-  Provide the output ONLY in the format above, no extra text.
+    **Provide the output strictly in the format above, with no extra text, explanation, or formatting.**
   `;
 
   try {
@@ -181,27 +183,36 @@ const extractClientRequirements = async (req, res, next) => {
       max_tokens: 150, // Increase max_tokens to accommodate both skills and budget
     });
 
-    // Log the raw AI response to inspect it
     const responseContent = completion.choices[0]?.message?.content.trim();
     console.log("Raw AI response:", responseContent);
 
-    // Remove any leading text (e.g., "Here are the extracted requirements:")
-    const jsonContent = responseContent.replace(
-      /^Here are the extracted requirements:\s*/,
-      ""
-    );
+    // Check if the response is in valid JSON format (starts with "{" and ends with "}")
+    if (responseContent.startsWith("{") && responseContent.endsWith("}")) {
+      try {
+        const extractedData = JSON.parse(responseContent);
 
-    // Parse the cleaned JSON content
-    const extractedData = JSON.parse(jsonContent);
-    console.log("The data extracted is ", extractedData);
-    // Assign the extracted skills and budget to the request body
-    req.body.skills = extractedData.skills || [];
-    req.body.extracted_budget = extractedData.budget || null;
+        // Assign extracted skills and budget to the request body
+        req.body.skills = extractedData.skills || [];
+        req.body.extracted_budget = extractedData.budget || null;
 
-    console.log("Extracted Skills:", req.body.skills);
-    console.log("Extracted Budget:", req.body.extracted_budget);
+        console.log("Extracted Skills:", req.body.skills);
+        console.log("Extracted Budget:", req.body.extracted_budget);
 
-    next();
+        return next(); // Proceed to the next middleware
+      } catch (error) {
+        console.error("Error parsing JSON:", error);
+        return res
+          .status(400)
+          .json({ error: "Invalid JSON format received from AI." });
+      }
+    } else {
+      console.error("Invalid response format:", responseContent);
+      return res
+        .status(400)
+        .json({
+          error: "Invalid format received from AI. Expected strict JSON.",
+        });
+    }
   } catch (error) {
     console.error("Error extracting requirements:", error);
     return res

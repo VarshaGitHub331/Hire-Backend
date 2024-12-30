@@ -11,14 +11,16 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendMail = async (to, orderId, subject, text, html) => {
-  const callBack = `https://589c-45-112-145-119.ngrok-free.app/order/acceptOrder/${orderId}`;
+  const callBack = `https://a1b7-49-204-110-161.ngrok-free.app
+/order/acceptOrder/${orderId}`;
   try {
     const mailOptions = {
       from: process.env.EMAIL_USER, // Sender's email address
       to: to, // Recipient's email address
       subject: subject, // Email subject
       text: text, // Plain text body
-      html: `<p>Click <a href="${callBack}">here</a> to accept your order.</p>`, // HTML body (optional)
+      html: `<div><p>${text} </p>
+      <p>Click <a href="${callBack}">here</a> to accept your order.</p></div>`, // HTML body (optional)
     };
 
     await transporter.sendMail(mailOptions);

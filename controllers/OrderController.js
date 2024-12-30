@@ -3,13 +3,41 @@ const {
   User,
   Order,
   Bids,
+  Client,
 } = require("../utils/InitializeModels.js");
+const { sendMail } = require("../utils/Mail.js");
 console.log("Checking modles From ORDER");
 console.log(Job_Postings);
 console.log(User);
 console.log(Bids);
 console.log(Order);
-
+const createOrderForGig = async (req, res, next) => {
+  const { gig_id, user_id, freelancer_id } = req.body;
+  const order = await Order.create({
+    gig_id,
+    creator: user_id,
+    acceptor: freelancer_id,
+    status: "created",
+  });
+  const freelancer = await User.findOne({
+    attributes: ["email"],
+    where: { user_id: freelancer_id },
+    raw: true,
+  });
+  const client = await User.findOne({
+    attributes: ["first_name"],
+    where: { user_id: user_id },
+    raw: true,
+  });
+  sendMail(
+    freelancer.email,
+    order.order_id,
+    "Client Request For Order Placement",
+    `${client.first_name} wants to place an order with you`
+  )
+    .then(() => console.log("Email sent"))
+    .catch((err) => console.error("Error sending email:", err));
+};
 const acceptOrder = async (req, res) => {
   const { orderId } = req.params;
 
@@ -63,9 +91,13 @@ const bidUpdate = async (req, res, next) => {
     next(e); // Pass any errors to the error handling middleware
   }
 };
-
+const fetchClientOrders = async (req, res, next) => {
+  const orders=await 
+};
 module.exports = {
   acceptOrder,
   completeOrder,
   bidUpdate,
+  createOrderForGig,
+  fetchClientOrders,
 };

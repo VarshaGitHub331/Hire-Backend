@@ -6,11 +6,14 @@ const { AuthUser } = require("../controllers/UserController");
 const {
   acceptOrder,
   completeOrder,
+  createOrderForGig,
   bidUpdate,
+  fetchClientOrders,
 } = require("../controllers/OrderController");
-const Order = require("../models/Order");
 
-OrderRouter.post("/acceptOrder", WrapAsync(acceptOrder));
+OrderRouter.post("/createOrderForGig", WrapAsync(createOrderForGig));
+OrderRouter.get("/acceptOrder/:orderId", WrapAsync(acceptOrder));
 OrderRouter.post("/completeOrder", WrapAsync(completeOrder));
 OrderRouter.patch("/updateBid", WrapAsync(bidUpdate));
+OrderRouter.get("/fetchOrders", WrapAsync(fetchClientOrders));
 module.exports = OrderRouter;
