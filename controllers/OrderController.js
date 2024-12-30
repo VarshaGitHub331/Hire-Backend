@@ -4,8 +4,10 @@ const {
   Order,
   Bids,
   Client,
+  Gigs,
 } = require("../utils/InitializeModels.js");
 const { sendMail } = require("../utils/Mail.js");
+const { Sequelize } = require("../models");
 console.log("Checking modles From ORDER");
 console.log(Job_Postings);
 console.log(User);
@@ -35,7 +37,10 @@ const createOrderForGig = async (req, res, next) => {
     "Client Request For Order Placement",
     `${client.first_name} wants to place an order with you`
   )
-    .then(() => console.log("Email sent"))
+    .then(() => {
+      console.log("Email sent");
+      return res.status(200).json("Done placing order");
+    })
     .catch((err) => console.error("Error sending email:", err));
 };
 const acceptOrder = async (req, res) => {
@@ -92,7 +97,116 @@ const bidUpdate = async (req, res, next) => {
   }
 };
 const fetchClientOrders = async (req, res, next) => {
-  const orders=await 
+  try {
+    const { user_id } = req.body;
+    console.log("User is ", user_id); // Ensure user_id is in req.body
+
+    // Fetch orders where the creator is the logged-in user (client)
+    const orders = await Order.findAll({
+      where: {
+        creator: user_id,
+      },
+      attributes: [
+        "order_id",
+        "creator",
+        "acceptor",
+        "job_posting_id",
+        "gig_id",
+        "status",
+        "createdAt",
+        "updatedAt",
+      ],
+    });
+
+    console.log(orders);
+
+    // Process each order asynchronously using Promise.all to fetch freelancer name and gig duration in parallel
+    const updatedOrders = await Promise.all(
+      orders.map(async (order) => {
+        // Get the freelancer's name by finding the user with the acceptor's id
+        const freelancer = await User.findOne({
+          where: { user_id: order.acceptor },
+          attributes: ["first_name"],
+          raw: true,
+        });
+
+        // Get the gig duration and assign it to the order
+        const gig = await Gigs.findOne({
+          where: { gig_id: order.gig_id },
+          attributes: ["duration"],
+          raw: true,
+        });
+
+        return {
+          ...order.dataValues, // Spread the original order fields
+          other_name: freelancer ? freelancer.first_name : "Unknown",
+          duration: gig ? gig.duration : "Not Specified",
+        };
+      })
+    );
+
+    // Send the updated orders back as the response
+    res.status(200).json(updatedOrders);
+  } catch (error) {
+    console.error("Error fetching client orders:", error);
+    next(error); // Forward the error to the error handling middleware
+  }
+};
+const fetchFreelancerOrders = async (req, res, next) => {
+  try {
+    const { user_id } = req.body;
+    console.log("User is ", user_id); // Ensure user_id is in req.body
+
+    // Fetch orders where the creator is the logged-in user (client)
+    const orders = await Order.findAll({
+      where: {
+        acceptor: user_id,
+      },
+      attributes: [
+        "order_id",
+        "creator",
+        "acceptor",
+        "job_posting_id",
+        "gig_id",
+        "status",
+        "createdAt",
+        "updatedAt",
+      ],
+    });
+
+    console.log(orders);
+
+    // Process each order asynchronously using Promise.all to fetch freelancer name and gig duration in parallel
+    const updatedOrders = await Promise.all(
+      orders.map(async (order) => {
+        // Get the freelancer's name by finding the user with the acceptor's id
+        const client = await User.findOne({
+          where: { user_id: order.creator },
+          attributes: ["first_name"],
+          raw: true,
+        });
+
+        // Get the gig duration and assign it to the order
+        const gig = await Gigs.findOne({
+          where: { gig_id: order.gig_id },
+          attributes: ["duration"],
+          raw: true,
+        });
+
+        return {
+          ...order.dataValues, // Spread the original order fields
+          other_name: client ? client.first_name : "Unknown",
+          duration: gig ? gig.duration : "Not Specified",
+        };
+      })
+    );
+
+    // Send the updated orders back as the response
+    res.status(200).json(updatedOrders);
+  } catch (error) {
+    console.error("Error fetching client orders:", error);
+    next(error); // Forward the error to the error handling middleware
+  }
 };
 module.exports = {
   acceptOrder,
@@ -100,4 +214,5 @@ module.exports = {
   bidUpdate,
   createOrderForGig,
   fetchClientOrders,
+  fetchFreelancerOrders,
 };

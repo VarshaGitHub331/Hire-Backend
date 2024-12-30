@@ -9,11 +9,13 @@ const {
   createOrderForGig,
   bidUpdate,
   fetchClientOrders,
+  fetchFreelancerOrders,
 } = require("../controllers/OrderController");
 
 OrderRouter.post("/createOrderForGig", WrapAsync(createOrderForGig));
 OrderRouter.get("/acceptOrder/:orderId", WrapAsync(acceptOrder));
 OrderRouter.post("/completeOrder", WrapAsync(completeOrder));
 OrderRouter.patch("/updateBid", WrapAsync(bidUpdate));
-OrderRouter.get("/fetchOrders", WrapAsync(fetchClientOrders));
+OrderRouter.post("/fetchClientOrders", WrapAsync(fetchClientOrders));
+OrderRouter.post("/fetchFreelancerOrders", WrapAsync(fetchFreelancerOrders));
 module.exports = OrderRouter;
