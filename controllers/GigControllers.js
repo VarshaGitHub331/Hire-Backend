@@ -322,7 +322,7 @@ const FetchAllGigs = async (req, res, next) => {
       console.log(categoryName.category_name);
       gig.category_name = categoryName.category_name;
       gig.skills_names = skillResult[0]["Skills.skill_names"];
-      gig.freelancer_name = freelancer.first_name;
+      gig.freelancer_name = freelancer?.first_name;
       gig.freelancer_rating =
         freelancerRating?.total_rating / freelancerRating?.rating_count;
       gig.freelancer_id = gig["Freelancer_Gig.user_id"];

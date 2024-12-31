@@ -214,6 +214,38 @@ const fetchFreelancerOrders = async (req, res, next) => {
     next(error); // Forward the error to the error handling middleware
   }
 };
+const RejectOrder = async (req, res, next) => {
+  const { orderId } = req.params;
+  console.log(orderId);
+  console.log("CALLED FOR REJECTION");
+  const order = await Order.findOne({
+    attributes: ["acceptor", "creator"],
+    where: { order_id: orderId, status: "created" },
+    raw: true,
+  });
+  const orderDestroy = await Order.destroy({ where: { order_id: orderId } });
+  const client = await User.findOne({
+    attributes: ["email"],
+    where: { user_id: order.creator },
+    raw: true,
+  });
+  const freelancer = await User.findOne({
+    attributes: ["first_name"],
+    where: { user_id: order.acceptor },
+    raw: true,
+  });
+  sendMail(
+    client.email,
+    order.order_id,
+    "Order Has Been Declientd",
+    `We are sorry to inform you that, ${freelancer.first_name} has declined your order`
+  )
+    .then(() => {
+      console.log("Email sent");
+      return res.status(200).json("Done rejecting order");
+    })
+    .catch((err) => console.error("Error sending email:", err));
+};
 const EditOrder = async (req, res, next) => {
   console.log(req.body);
   const { order_id, status } = req.body;
@@ -228,4 +260,5 @@ module.exports = {
   fetchClientOrders,
   fetchFreelancerOrders,
   EditOrder,
+  RejectOrder,
 };

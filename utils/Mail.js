@@ -11,8 +11,9 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendMail = async (to, orderId, subject, text, html) => {
-  const callBack = `https://a1b7-49-204-110-161.ngrok-free.app
+  const acceptCallBack = `https://15f5-49-204-110-161.ngrok-free.app
 /order/acceptOrder/${orderId}`;
+  const rejectCallBack = `https://15f5-49-204-110-161.ngrok-free.app/order/rejectOrder/${orderId}`;
   try {
     const mailOptions = {
       from: process.env.EMAIL_USER, // Sender's email address
@@ -20,7 +21,8 @@ const sendMail = async (to, orderId, subject, text, html) => {
       subject: subject, // Email subject
       text: text, // Plain text body
       html: `<div><p>${text} </p>
-      <p>Click <a href="${callBack}">here</a> to accept your order.</p></div>`, // HTML body (optional)
+      <p>Click <a href="${acceptCallBack}">here</a> to accept your order.</p>
+      <p>Click <a href="${rejectCallBack}">here</a> to decline this order.</div>`, // HTML body (optional)
     };
 
     await transporter.sendMail(mailOptions);
