@@ -38,6 +38,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM("created", "accepted", "progress", "complete"),
       allowNull: false,
     },
+    payable: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    notes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
   });
   Order.associate = (models) => {
     Order.belongsTo(models.User, {

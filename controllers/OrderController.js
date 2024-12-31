@@ -14,12 +14,14 @@ console.log(User);
 console.log(Bids);
 console.log(Order);
 const createOrderForGig = async (req, res, next) => {
-  const { gig_id, user_id, freelancer_id } = req.body;
+  const { gig_id, user_id, freelancer_id, payable, notes } = req.body;
   const order = await Order.create({
     gig_id,
     creator: user_id,
     acceptor: freelancer_id,
     status: "created",
+    payable,
+    notes,
   });
   const freelancer = await User.findOne({
     attributes: ["email"],
@@ -113,6 +115,8 @@ const fetchClientOrders = async (req, res, next) => {
         "job_posting_id",
         "gig_id",
         "status",
+        "payable",
+        "notes",
         "createdAt",
         "updatedAt",
       ],
@@ -167,6 +171,8 @@ const fetchFreelancerOrders = async (req, res, next) => {
         "creator",
         "acceptor",
         "job_posting_id",
+        "payable",
+        "notes",
         "gig_id",
         "status",
         "createdAt",
@@ -208,6 +214,12 @@ const fetchFreelancerOrders = async (req, res, next) => {
     next(error); // Forward the error to the error handling middleware
   }
 };
+const EditOrder = async (req, res, next) => {
+  console.log(req.body);
+  const { order_id, status } = req.body;
+  await Order.update({ status: status }, { where: { order_id } });
+  res.status(200).json("Edited");
+};
 module.exports = {
   acceptOrder,
   completeOrder,
@@ -215,4 +227,5 @@ module.exports = {
   createOrderForGig,
   fetchClientOrders,
   fetchFreelancerOrders,
+  EditOrder,
 };
