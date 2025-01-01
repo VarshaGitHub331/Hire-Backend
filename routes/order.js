@@ -12,6 +12,7 @@ const {
   fetchFreelancerOrders,
   EditOrder,
   RejectOrder,
+  getOrder,
 } = require("../controllers/OrderController");
 const Order = require("../models/Order");
 
@@ -23,5 +24,6 @@ OrderRouter.patch("/updateBid", WrapAsync(bidUpdate));
 OrderRouter.post("/fetchClientOrders", WrapAsync(fetchClientOrders));
 OrderRouter.post("/fetchFreelancerOrders", WrapAsync(fetchFreelancerOrders));
 OrderRouter.put("/edit", WrapAsync(EditOrder));
+OrderRouter.get("/getOrder/:orderId", WrapAsync(getOrder));
 
 module.exports = OrderRouter;

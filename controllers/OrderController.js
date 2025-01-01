@@ -14,13 +14,14 @@ console.log(User);
 console.log(Bids);
 console.log(Order);
 const createOrderForGig = async (req, res, next) => {
-  const { gig_id, user_id, freelancer_id, payable, notes } = req.body;
+  const { gig_id, user_id, freelancer_id, payable, notes, package } = req.body;
   const order = await Order.create({
     gig_id,
     creator: user_id,
     acceptor: freelancer_id,
     status: "created",
     payable,
+    package,
     notes,
   });
   const freelancer = await User.findOne({
@@ -252,6 +253,91 @@ const EditOrder = async (req, res, next) => {
   await Order.update({ status: status }, { where: { order_id } });
   res.status(200).json("Edited");
 };
+const getOrder = async (req, res, next) => {
+  const { orderId } = req.params;
+
+  try {
+    // Fetch the order details
+    const fetchedOrder = await Order.findOne({
+      attributes: [
+        "order_id",
+        "creator",
+        "acceptor",
+        "job_posting_id",
+        "payable",
+        "notes",
+        "gig_id",
+        "status",
+        "package",
+        "createdAt",
+        "updatedAt",
+      ],
+      where: { order_id: orderId },
+      raw: true, // Fetch plain JS object
+    });
+
+    if (!fetchedOrder) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Fetch related data in parallel
+    const [gig, freelancer, client] = await Promise.all([
+      Gigs.findOne({ where: { gig_id: fetchedOrder.gig_id }, raw: true }),
+      User.findOne({
+        attributes: ["first_name", "email"],
+        where: { user_id: fetchedOrder.acceptor },
+        raw: true,
+      }),
+      User.findOne({
+        attributes: ["first_name", "email"],
+        where: { user_id: fetchedOrder.creator },
+        raw: true,
+      }),
+    ]);
+
+    // Validate related data
+    if (!gig) {
+      return res.status(404).json({ message: "Gig not found" });
+    }
+
+    if (!freelancer) {
+      return res.status(404).json({ message: "Freelancer not found" });
+    }
+
+    if (!client) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+
+    // Determine features based on package
+    const features = gig.features;
+    const packageFeatures =
+      fetchedOrder.package == "Basic"
+        ? []
+        : fetchedOrder.package == "Standard"
+        ? gig.standard_features
+        : gig.advanced_features;
+
+    // Construct the order details response
+    const orderDetails = {
+      ...fetchedOrder,
+      freelancer_name: freelancer.first_name,
+      freelancer_email: freelancer.email,
+      client_name: client.first_name,
+      client_email: client.email,
+      features,
+      packageFeatures,
+    };
+
+    // Log and send the response
+    console.log("The order details are:", orderDetails);
+    res.status(200).json(orderDetails);
+  } catch (error) {
+    // Handle unexpected errors
+    console.error("Error fetching order details:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   acceptOrder,
   completeOrder,
@@ -261,4 +347,5 @@ module.exports = {
   fetchFreelancerOrders,
   EditOrder,
   RejectOrder,
+  getOrder,
 };

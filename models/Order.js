@@ -52,6 +52,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    package: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
   });
   Order.associate = (models) => {
     Order.belongsTo(models.User, {
