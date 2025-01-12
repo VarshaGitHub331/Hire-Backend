@@ -4,6 +4,7 @@ const {
   Order,
   Bids,
   Client,
+  Order_Timeline,
   Gigs,
 } = require("../utils/InitializeModels.js");
 const { sendMail } = require("../utils/Mail.js");
@@ -310,6 +311,7 @@ const getOrder = async (req, res, next) => {
 
     // Determine features based on package
     const features = gig.features;
+    const title = gig.title;
     const packageFeatures =
       fetchedOrder.package == "Basic"
         ? []
@@ -324,6 +326,8 @@ const getOrder = async (req, res, next) => {
       freelancer_email: freelancer.email,
       client_name: client.first_name,
       client_email: client.email,
+      picture: gig.picture,
+      title,
       features,
       packageFeatures,
     };
@@ -337,7 +341,43 @@ const getOrder = async (req, res, next) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
+const AddTask = async (req, res, next) => {
+  const { order_id, description } = req.body;
+  try {
+    const order_timeline_item = await Order_Timeline.create({
+      order_id,
+      task_description: description,
+      task_status: "Pending",
+    });
+    res.status(200).json(order_timeline_item);
+  } catch (e) {
+    next(e);
+  }
+};
+const CompleteTask = async (req, res, next) => {
+  const { id } = req.body;
+  try {
+    await Order_Timeline.update(
+      { task_status: "Completed" },
+      { where: { id } }
+    );
+    return res.status(200).json("Order completed");
+  } catch (e) {
+    next(e);
+  }
+};
+const updateDescription = async (req, res, next) => {
+  const { id, description } = req.body;
+  try {
+    const updatedOrder = await Order_Timeline.update(
+      { task_description: description },
+      { where: { id } }
+    );
+    return res.status(200).json(updatedOrder);
+  } catch (e) {
+    next(e);
+  }
+};
 module.exports = {
   acceptOrder,
   completeOrder,
@@ -348,4 +388,7 @@ module.exports = {
   EditOrder,
   RejectOrder,
   getOrder,
+  AddTask,
+  CompleteTask,
+  updateDescription,
 };

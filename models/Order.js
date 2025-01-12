@@ -56,6 +56,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: false,
     },
+    payment: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      default: "pending",
+    },
   });
   Order.associate = (models) => {
     Order.belongsTo(models.User, {

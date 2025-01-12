@@ -8,6 +8,10 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD,
   },
+  tls: {
+    rejectUnauthorized: false, // Temporary fix
+  },
+  debug: true, // Enable debug output
 });
 
 const sendMail = async (to, orderId, subject, text, html) => {

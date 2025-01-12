@@ -13,6 +13,9 @@ const {
   EditOrder,
   RejectOrder,
   getOrder,
+  AddTask,
+  CompleteTask,
+  updateDescription,
 } = require("../controllers/OrderController");
 const Order = require("../models/Order");
 
@@ -25,5 +28,8 @@ OrderRouter.post("/fetchClientOrders", WrapAsync(fetchClientOrders));
 OrderRouter.post("/fetchFreelancerOrders", WrapAsync(fetchFreelancerOrders));
 OrderRouter.put("/edit", WrapAsync(EditOrder));
 OrderRouter.get("/getOrder/:orderId", WrapAsync(getOrder));
+OrderRouter.post("/addTask", WrapAsync(AddTask));
+OrderRouter.post("/completeTask", WrapAsync(CompleteTask));
+OrderRouter.post("/updateTask", WrapAsync(updateDescription));
 
 module.exports = OrderRouter;
