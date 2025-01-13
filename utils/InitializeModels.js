@@ -25,6 +25,7 @@ const {
   Applicants,
   Freelancer_Skills,
   Order_Timeline,
+  Client_Ratings,
 } = db;
 
 module.exports = {
@@ -51,4 +52,5 @@ module.exports = {
   Bids,
   Applicants,
   Order_Timeline,
+  Client_Ratings,
 };
