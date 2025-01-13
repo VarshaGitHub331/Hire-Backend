@@ -43,7 +43,7 @@ const OrderRouter = require("./routes/order.js");
 const dataRouter = require("./routes/Data.js");
 const gigRouter = require("./routes/gigs.js");
 const conversationRouter = require("./routes/Conversation.js");
-
+const reviewRouter = require("./routes/review.js");
 app.use("/user", UserRouter);
 app.use("/freelancer", FreelancerRouter);
 app.use("/client", ClientRouter);
@@ -51,6 +51,7 @@ app.use("/order", OrderRouter);
 app.use("/data", dataRouter);
 app.use("/gigs", gigRouter);
 app.use("/conversation", conversationRouter);
+app.use("/reviews", reviewRouter);
 
 // Start the server
 server.listen(3001, () => {

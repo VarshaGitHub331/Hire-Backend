@@ -16,8 +16,8 @@ const {
   AddTask,
   CompleteTask,
   updateDescription,
+  getTasks,
 } = require("../controllers/OrderController");
-const Order = require("../models/Order");
 
 OrderRouter.post("/createOrderForGig", WrapAsync(createOrderForGig));
 OrderRouter.get("/acceptOrder/:orderId", WrapAsync(acceptOrder));
@@ -29,6 +29,7 @@ OrderRouter.post("/fetchFreelancerOrders", WrapAsync(fetchFreelancerOrders));
 OrderRouter.put("/edit", WrapAsync(EditOrder));
 OrderRouter.get("/getOrder/:orderId", WrapAsync(getOrder));
 OrderRouter.post("/addTask", WrapAsync(AddTask));
+OrderRouter.get("/getTasks/:orderId", WrapAsync(getTasks));
 OrderRouter.post("/completeTask", WrapAsync(CompleteTask));
 OrderRouter.post("/updateTask", WrapAsync(updateDescription));
 

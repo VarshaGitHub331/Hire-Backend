@@ -341,6 +341,7 @@ const getOrder = async (req, res, next) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 const AddTask = async (req, res, next) => {
   const { order_id, description } = req.body;
   try {
@@ -378,6 +379,20 @@ const updateDescription = async (req, res, next) => {
     next(e);
   }
 };
+const getTasks = async (req, res, next) => {
+  const { orderId } = req.params;
+  try {
+    const tasks = await Order_Timeline.findAll(
+      {
+        where: { order_id: orderId },
+      },
+      { raw: true }
+    );
+    return res.status(200).json(tasks);
+  } catch (e) {
+    next(e);
+  }
+};
 module.exports = {
   acceptOrder,
   completeOrder,
@@ -389,6 +404,7 @@ module.exports = {
   RejectOrder,
   getOrder,
   AddTask,
+  getTasks,
   CompleteTask,
   updateDescription,
 };
