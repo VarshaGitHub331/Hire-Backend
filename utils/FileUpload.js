@@ -42,4 +42,20 @@ const uploadGigMedia = async (req, res, next) => {
     res.status(400).json("Error in cloudinary ");
   }
 };
-module.exports = { uploadResume, uploadGigMedia };
+const uploadProfilePicture = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(500).json("No picture uploaded");
+    }
+    const res = await cloudinary.uploader.upload(req.file.path, {
+      folder: "ProfilePicture",
+      resource_type: "image",
+    });
+    req.profileUrl = res.secure_url;
+    fs.unlinkSync(req.file.path);
+    next();
+  } catch (e) {
+    res.status(400).json("Error in cloudinary");
+  }
+};
+module.exports = { uploadResume, uploadGigMedia, uploadProfilePicture };

@@ -22,6 +22,10 @@ module.exports = (sequelize, DataTypes) => {
       role: {
         type: DataTypes.ENUM("freelancer", "client", "admin"),
       },
+      profilePic: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       // Map Sequelize's `createdAt` and `updatedAt` to your actual table's `created_at` and `updated_at`

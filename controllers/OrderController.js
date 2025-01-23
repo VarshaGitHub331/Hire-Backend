@@ -317,7 +317,7 @@ const getOrder = async (req, res, next) => {
         ? []
         : fetchedOrder.package == "Standard"
         ? gig.standard_features
-        : gig.advanced_features;
+        : [...gig.standard_features, ...gig.advanced_features];
 
     // Construct the order details response
     const orderDetails = {

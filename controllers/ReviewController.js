@@ -4,6 +4,7 @@ const {
   Client_Ratings,
 } = require("../utils/InitializeModels.js");
 const createReview = async (req, res, next) => {
+  console.log(req.body);
   const { reviewer_id, reviewee_id, order_id, comment, rating, role } =
     req.body;
   const review = await Review.create({
@@ -53,7 +54,7 @@ const createReview = async (req, res, next) => {
       });
     } else {
       await Client_Ratings.create({
-        client_id: reviewee_id,
+        client_id: parseInt(reviewee_id),
         total_rating: rating,
         rating_count: 1,
       });
