@@ -17,8 +17,9 @@ const {
   CompleteTask,
   updateDescription,
   getTasks,
+  createOrderTimeline,
 } = require("../controllers/OrderController");
-
+const { generateTimeLine } = require("../controllers/AIControllers");
 OrderRouter.post("/createOrderForGig", WrapAsync(createOrderForGig));
 OrderRouter.get("/acceptOrder/:orderId", WrapAsync(acceptOrder));
 OrderRouter.get("/rejectOrder/:orderId", WrapAsync(RejectOrder));
@@ -32,5 +33,9 @@ OrderRouter.post("/addTask", WrapAsync(AddTask));
 OrderRouter.get("/getTasks/:orderId", WrapAsync(getTasks));
 OrderRouter.post("/completeTask", WrapAsync(CompleteTask));
 OrderRouter.post("/updateTask", WrapAsync(updateDescription));
-
+OrderRouter.post(
+  "/generateAITimeline",
+  WrapAsync(generateTimeLine),
+  WrapAsync(createOrderTimeline)
+);
 module.exports = OrderRouter;

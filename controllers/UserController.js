@@ -1,4 +1,9 @@
-const { User, Freelancer, Client } = require("../utils/InitializeModels");
+const {
+  User,
+  Freelancer,
+  Client,
+  Order,
+} = require("../utils/InitializeModels");
 require("dotenv").config(); // Load environment variables from .env file
 
 const bcrypt = require("bcrypt");
@@ -115,4 +120,54 @@ const AuthUser = async (req, res, next) => {
     next();
   });
 };
-module.exports = { RegisterUser, LoginUser, AuthUser };
+const FetchProfile = async (req, res, next) => {
+  console.log("Here for fetching profile");
+  console.log(req.query);
+  const { user_id, role } = req.query;
+  if (role == "freelancer") {
+    const fetchedUser = await User.findOne({
+      attributes: [
+        "first_name",
+        "last_name",
+        "email",
+        "role",
+        "created_at",
+        "updated_at",
+      ],
+      where: {
+        user_id,
+      },
+      raw: true,
+    });
+    const freelancerDetails = await Freelancer.findOne({
+      where: {
+        user_id,
+      },
+      raw: true,
+    });
+    const completedOrders = await Order.count({
+      where: {
+        acceptor: user_id,
+        status: "Complete",
+      },
+    });
+    const progressingOrder = await Order.count({
+      where: {
+        acceptor: user_id,
+        status: "Accepted",
+      },
+    });
+    console.log(fetchedUser);
+    console.log(freelancerDetails);
+    console.log(completedOrders);
+    console.log(progressingOrder);
+    res.status(201).json({
+      UserDetails: fetchedUser,
+      FrelancerDetails: freelancerDetails,
+      completedOrders: completedOrders,
+      progressingOrder: progressingOrder,
+    });
+  } else {
+  }
+};
+module.exports = { RegisterUser, LoginUser, AuthUser, FetchProfile };

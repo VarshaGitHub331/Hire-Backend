@@ -318,19 +318,13 @@ const extractCategoriesForTailoredGigs = async (req, res, next) => {
   next();
 };
 const generateTimeLine = async (req, res, next) => {
-  const { features, packageFeatures } = req.body;
+  const { features, packageFeatures, gigTitle } = req.body;
   const prompt = `
-  You are an AI trained to suggest advanced or standard features for a gig based on provided features and level.
-  - For generating standard features, use the basic features as input.
-  - For generating advanced features, use both standard and basic features as input.
-  - Ensure clear demarcation between levels and provide only 3 features as a valid JavaScript array.
-  - The output should be a JavaScript array like this: ["feature1", "feature2", "feature3"].
-  - Do not include any extra text, explanations, or formatting, only the array.
-
-  Title: "${title}"
-  Level: "${level}"
-  Basic Features: "${basic_features}"
-  Standard Features:"${standard_features}"
+  You are an AI trained to suggest to-do or timeline activities based on the features which are basic features and package features of a gig(if provided), you will be provided with gig title.
+  - Return only a JSON array of strings that are to-do tasks only with no other  additional preceeding or succeeding information. 
+  features:${features}
+  packageFeatures:${packageFeatures}
+  title:${gigTitle}
 `;
 
   try {
@@ -348,10 +342,10 @@ const generateTimeLine = async (req, res, next) => {
     console.log("AI Response:", responseContent);
 
     // Attempt to parse the response as JSON
-    let featuresArray;
+    let tasksArray;
     try {
-      featuresArray = JSON.parse(responseContent);
-      if (!Array.isArray(featuresArray)) {
+      tasksArray = JSON.parse(responseContent);
+      if (!Array.isArray(tasksArray)) {
         throw new Error("Response is not an array");
       }
     } catch (parseError) {
@@ -362,7 +356,8 @@ const generateTimeLine = async (req, res, next) => {
     }
 
     // Send the validated array to the frontend
-    return res.status(200).json({ features: featuresArray });
+    req.body.AIGeneratedTasks = tasksArray;
+    next();
   } catch (error) {
     console.error("Error generating features:", error.message);
     res

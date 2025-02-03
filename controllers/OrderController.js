@@ -393,6 +393,21 @@ const getTasks = async (req, res, next) => {
     next(e);
   }
 };
+const createOrderTimeline = async (req, res, next) => {
+  const { AIGeneratedTasks, order_id } = req.body;
+  try {
+    for (task of AIGeneratedTasks) {
+      const order_timeline_item = await Order_Timeline.create({
+        order_id,
+        task_description: task,
+        task_status: "Pending",
+      });
+    }
+    return res.status(200).json("Completed creating order timelines");
+  } catch (e) {
+    next(e);
+  }
+};
 module.exports = {
   acceptOrder,
   completeOrder,
@@ -407,4 +422,5 @@ module.exports = {
   getTasks,
   CompleteTask,
   updateDescription,
+  createOrderTimeline,
 };

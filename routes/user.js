@@ -33,5 +33,5 @@ UserRouter.post(
     }
   }
 );
-
+UserRouter.get("/fetchProfile", WrapAsync(FetchProfile));
 module.exports = UserRouter;
