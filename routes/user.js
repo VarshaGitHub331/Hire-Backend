@@ -8,6 +8,7 @@ const {
   RegisterUser,
   LoginUser,
   FetchProfile,
+  updateUserProfile,
 } = require("../controllers/UserController.js");
 const { User } = require("../utils/InitializeModels.js");
 
@@ -34,4 +35,5 @@ UserRouter.post(
   }
 );
 UserRouter.get("/fetchProfile", WrapAsync(FetchProfile));
+UserRouter.post("/updateUserProfile", WrapAsync(updateUserProfile));
 module.exports = UserRouter;

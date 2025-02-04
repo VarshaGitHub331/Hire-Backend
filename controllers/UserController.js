@@ -131,6 +131,7 @@ const FetchProfile = async (req, res, next) => {
         "last_name",
         "email",
         "role",
+        "profilePic",
         "created_at",
         "updated_at",
       ],
@@ -170,4 +171,25 @@ const FetchProfile = async (req, res, next) => {
   } else {
   }
 };
-module.exports = { RegisterUser, LoginUser, AuthUser, FetchProfile };
+const updateUserProfile = async (req, res, next) => {
+  const { email, user_id } = req.body;
+  const user = await User.update(
+    {
+      email: email,
+    },
+    {
+      where: {
+        user_id,
+      },
+    },
+    { raw: true }
+  );
+  return res.status(201).json("Updated ", user);
+};
+module.exports = {
+  RegisterUser,
+  LoginUser,
+  AuthUser,
+  FetchProfile,
+  updateUserProfile,
+};

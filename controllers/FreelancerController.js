@@ -20,6 +20,8 @@ if (Gigs !== undefined) {
   console.log("NOT UNDEFINED");
 }
 const UpdateProfile = (req, res, next) => {
+  console.log("HERE FOR EDITING FREELANCER PROFILE");
+  console.log(req.body);
   const { resume_url, profile, linkedin, cost, user_id } = req.body;
   if (!user_id) {
     res.status(404).json("user_id cannot be null");
@@ -36,7 +38,8 @@ const UpdateProfile = (req, res, next) => {
     );
     res.status(201).json(updated);
   } catch (e) {
-    next(e);
+    console.log(e);
+    return e;
   }
 };
 const UpdateCategories = async (req, res, next) => {

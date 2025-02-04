@@ -43,6 +43,7 @@ const uploadGigMedia = async (req, res, next) => {
   }
 };
 const uploadProfilePicture = async (req, res, next) => {
+  console.log("HERE TO UPLOAD PCITURE");
   try {
     if (!req.file) {
       return res.status(500).json("No picture uploaded");

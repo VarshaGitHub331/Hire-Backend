@@ -25,7 +25,7 @@ const { uploadResume, uploadGigMedia } = require("../utils/FileUpload");
 const { Freelancer } = require("../utils/InitializeModels");
 const { Freelancer_Skills, Skills } = require("../utils/InitializeModels");
 
-FreelancerRouter.post("/updateProfile", AuthUser, WrapAsync(UpdateProfile));
+FreelancerRouter.post("/updateProfile", UpdateProfile);
 FreelancerRouter.post(
   "/updateCategories",
   AuthUser,
