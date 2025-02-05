@@ -13,9 +13,16 @@ const {
   Gig_Skills,
 } = require("../utils/InitializeModels");
 const sequelize = require("../utils/Connection.js");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const fs = require("fs");
+const pdfParse = require("pdf-parse");
+const axios = require("axios");
 
+// Initialize Gemini API
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const { raw } = require("mysql2");
 const { Sequelize } = require("../models/index.js");
+const { response } = require("express");
 if (Gigs !== undefined) {
   console.log("NOT UNDEFINED");
 }
@@ -308,6 +315,135 @@ const AddGigSkills = async (req, res, next) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+const profileUserWithAI = async (req, res, next) => {
+  const { user_id } = req.body;
+
+  try {
+    const freelancer = await Freelancer.findOne({
+      where: { user_id },
+    });
+
+    if (!freelancer || !freelancer.resume) {
+      return res.status(404).json({ error: "Resume not found" });
+    }
+
+    const resumePath = freelancer.resume;
+    console.log("Resume URL:", resumePath);
+
+    // Fetch the PDF as binary data
+    const remoteResponse = await axios.get(resumePath, {
+      responseType: "arraybuffer",
+    });
+    const pdfBuffer = remoteResponse.data;
+
+    // Parse the PDF text
+    const data = await pdfParse(pdfBuffer);
+    const resumeText = data.text;
+
+    // Extract skills using AI
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const prompt = `Extract all relevant skills from the following resume:\n${resumeText}`;
+
+    const aiResponse = await model.generateContent(prompt);
+
+    // ✅ Log entire AI response for debugging
+    console.log("AI Response:", JSON.stringify(aiResponse, null, 2));
+
+    // ✅ Ensure correct path to skills
+    const candidates = aiResponse?.response?.candidates;
+    if (!candidates || candidates.length === 0) {
+      throw new Error("No candidates returned from AI model");
+    }
+
+    const contentParts = candidates[0]?.content?.parts;
+    if (!contentParts || contentParts.length === 0) {
+      throw new Error("AI response has no content parts");
+    }
+
+    const extractedSkillsText = contentParts[0].text;
+
+    // ✅ Extract only skills, clean up Markdown & headers
+    const extractedSkills = extractedSkillsText
+      .split("\n")
+      .map((skill) => skill.replace(/\*|\*\*/g, "").trim()) // Remove markdown symbols
+      .filter((skill) => skill && !skill.includes("Skills:")); // Remove section headers
+
+    req.body.extractedSkills = extractedSkills;
+    next();
+  } catch (e) {
+    console.error("Error extracting skills:", e.message);
+    res.status(500).json({ error: e.message || "Failed to process resume" });
+  }
+};
+const mapResumeSkills = async (req, res, next) => {
+  const fetchedSkills = req.body.extractedSkills;
+  const { user_id } = req.body;
+  const dbSkills = await Skills.findAll({
+    attributes: ["skill_id", "skill_name"],
+    raw: true,
+  });
+
+  const textCategories = [];
+  for (let s of dbSkills) {
+    textCategories.push(s.skill_name);
+  }
+
+  const response = await fetch("http://127.0.0.1:5000/extract_skills", {
+    method: "POST",
+    body: JSON.stringify({
+      generated_skills: fetchedSkills,
+      db_skills: textCategories,
+    }),
+    headers: { "Content-type": "application/json" },
+  });
+
+  const data = await response.json();
+  console.log(data);
+
+  for (let s of data.extracted_skills) {
+    let c = await Skills.findOne({
+      attributes: ["category_id", "skill_id"],
+      where: { skill_name: s },
+      raw: true,
+    });
+
+    console.log(c);
+
+    // Check if the Freelancer_Category record already exists
+    const existingCategory = await Freelancer_Category.findOne({
+      where: {
+        user_id,
+        category_id: c.category_id,
+      },
+    });
+
+    // If no existing category is found, insert new record
+    if (!existingCategory) {
+      await Freelancer_Category.create({
+        user_id,
+        category_id: c.category_id,
+      });
+    }
+
+    // Check if the Freelancer_Skills record already exists
+    const existingSkill = await Freelancer_Skills.findOne({
+      where: {
+        user_id,
+        skill_id: c.skill_id,
+      },
+    });
+
+    // If no existing skill is found, insert new record
+    if (!existingSkill) {
+      await Freelancer_Skills.create({
+        user_id,
+        skill_id: c.skill_id,
+      });
+    }
+  }
+
+  res.status(201).json("Profiled User");
+};
 
 module.exports = {
   UpdateProfile,
@@ -318,4 +454,6 @@ module.exports = {
   CreateGig,
   AddGigSkills,
   insertFoundSkills,
+  profileUserWithAI,
+  mapResumeSkills,
 };

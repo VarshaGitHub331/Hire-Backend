@@ -9,6 +9,8 @@ const {
   insertFoundSkills,
   CreateGig,
   AddGigSkills,
+  profileUserWithAI,
+  mapResumeSkills,
 } = require("../controllers/FreelancerController");
 const {
   extractSkills,
@@ -94,4 +96,5 @@ FreelancerRouter.post(
   CreateGig,
   AddGigSkills
 );
+FreelancerRouter.post("/profileUserWithAI", profileUserWithAI, mapResumeSkills);
 module.exports = FreelancerRouter;

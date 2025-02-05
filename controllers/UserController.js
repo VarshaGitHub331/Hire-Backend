@@ -3,9 +3,13 @@ const {
   Freelancer,
   Client,
   Order,
+  Freelancer_Skills,
+  Freelancer_Category,
+  Category,
+  Skills,
 } = require("../utils/InitializeModels");
 require("dotenv").config(); // Load environment variables from .env file
-
+const { Sequelize } = require("../models/index.js");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 async function HashPassword(password) {
@@ -124,7 +128,9 @@ const FetchProfile = async (req, res, next) => {
   console.log("Here for fetching profile");
   console.log(req.query);
   const { user_id, role } = req.query;
+
   if (role == "freelancer") {
+    // Fetch the user details
     const fetchedUser = await User.findOne({
       attributes: [
         "first_name",
@@ -140,37 +146,90 @@ const FetchProfile = async (req, res, next) => {
       },
       raw: true,
     });
+
+    // Fetch the freelancer-specific details
     const freelancerDetails = await Freelancer.findOne({
       where: {
         user_id,
       },
       raw: true,
     });
+
+    // Fetch completed and progressing orders
     const completedOrders = await Order.count({
       where: {
         acceptor: user_id,
         status: "Complete",
       },
     });
+
     const progressingOrder = await Order.count({
       where: {
         acceptor: user_id,
         status: "Accepted",
       },
     });
-    console.log(fetchedUser);
-    console.log(freelancerDetails);
-    console.log(completedOrders);
-    console.log(progressingOrder);
+
+    // Fetch freelancer skills
+    const freelancerSkills = await Freelancer_Skills.findAll({
+      attributes: ["skill_id"],
+      where: {
+        user_id,
+      },
+      raw: true,
+    });
+
+    // Fetch freelancer category
+    const freelancerCategory = await Freelancer_Category.findAll({
+      attributes: ["category_id"],
+      where: {
+        user_id,
+      },
+      raw: true,
+    });
+
+    // Extract skill_ids and category_ids
+    const freelancerSkillIds = freelancerSkills.map((skill) => skill.skill_id);
+    const freelancerCategoryIds = freelancerCategory.map(
+      (category) => category.category_id
+    );
+
+    // Fetch skill names using the IN operator
+    const skillNames = await Skills.findAll({
+      attributes: ["skill_name"],
+      where: {
+        skill_id: {
+          [Sequelize.Op.in]: freelancerSkillIds, // Use IN operator to fetch matching skill names
+        },
+      },
+      raw: true,
+    });
+
+    // Fetch category names using the IN operator
+    const categoryNames = await Category.findAll({
+      attributes: ["category_name"],
+      where: {
+        category_id: {
+          [Sequelize.Op.in]: freelancerCategoryIds, // Use IN operator to fetch matching category names
+        },
+      },
+      raw: true,
+    });
+
+    // Returning the response with skill names and category names
     res.status(201).json({
       UserDetails: fetchedUser,
       FrelancerDetails: freelancerDetails,
-      completedOrders: completedOrders,
-      progressingOrder: progressingOrder,
+      completedOrders,
+      progressingOrder,
+      freelancerSkills: skillNames, // Returning skill names
+      freelancerCategory: categoryNames, // Returning category names
     });
   } else {
+    // Handle other roles if necessary
   }
 };
+
 const updateUserProfile = async (req, res, next) => {
   const { email, user_id } = req.body;
   const user = await User.update(
@@ -184,7 +243,7 @@ const updateUserProfile = async (req, res, next) => {
     },
     { raw: true }
   );
-  return res.status(201).json("Updated ", user);
+  res.status(200).json(user);
 };
 module.exports = {
   RegisterUser,
