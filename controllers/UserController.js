@@ -196,7 +196,7 @@ const FetchProfile = async (req, res, next) => {
 
     // Fetch skill names using the IN operator
     const skillNames = await Skills.findAll({
-      attributes: ["skill_name"],
+      attributes: ["skill_name", "skill_id"],
       where: {
         skill_id: {
           [Sequelize.Op.in]: freelancerSkillIds, // Use IN operator to fetch matching skill names
@@ -207,7 +207,7 @@ const FetchProfile = async (req, res, next) => {
 
     // Fetch category names using the IN operator
     const categoryNames = await Category.findAll({
-      attributes: ["category_name"],
+      attributes: ["category_name","category_id"],
       where: {
         category_id: {
           [Sequelize.Op.in]: freelancerCategoryIds, // Use IN operator to fetch matching category names

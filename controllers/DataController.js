@@ -19,6 +19,14 @@ async function FetchCategories(req, res, next) {
     next(e);
   }
 }
+async function FetchAllSkils(req, res, next) {
+  try {
+    const skills = await Skills.findAll();
+    res.status(200).json({ skills: skills });
+  } catch (e) {
+    next(e);
+  }
+}
 const FetchSkills = async (req, res, next) => {
   console.log("In fetch skills");
 
@@ -70,4 +78,4 @@ const FetchSkills = async (req, res, next) => {
   }
 };
 
-module.exports = { FetchCategories, FetchSkills };
+module.exports = { FetchCategories, FetchSkills, FetchAllSkils };

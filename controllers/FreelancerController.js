@@ -444,6 +444,100 @@ const mapResumeSkills = async (req, res, next) => {
 
   res.status(201).json("Profiled User");
 };
+const updateCategories = async (req, res) => {
+  console.log("Called here to updte categories");
+  try {
+    const { user_id, freelancerCategories } = req.body;
+
+    if (!user_id || !Array.isArray(freelancerCategories)) {
+      return res.status(400).json({ error: "Invalid input data" });
+    }
+
+    // Extract category IDs from freelancerCategories
+    const categoryIds = freelancerCategories.map((cat) => cat.category_id);
+
+    // Step 1: Remove only categories that are NOT in the new list
+    await Freelancer_Category.destroy({
+      where: {
+        user_id,
+        category_id: { [Sequelize.Op.notIn]: categoryIds }, // Delete categories NOT in the new list
+      },
+    });
+
+    // Step 2: Find existing categories
+    const existingCategories = await Freelancer_Category.findAll({
+      where: {
+        user_id,
+        category_id: { [Sequelize.Op.in]: categoryIds }, // Keep categories already in the list
+      },
+    });
+
+    const existingCategoryIds = existingCategories.map(
+      (cat) => cat.category_id
+    );
+
+    // Step 3: Insert only new categories that are not already present
+    const newCategories = categoryIds
+      .filter((cat_id) => !existingCategoryIds.includes(cat_id))
+      .map((cat_id) => ({ user_id, category_id: cat_id }));
+
+    if (newCategories.length > 0) {
+      await Freelancer_Category.bulkCreate(newCategories);
+    }
+
+    return res
+      .status(200)
+      .json({ message: "Categories updated successfully!" });
+  } catch (error) {
+    console.error("Error updating categories:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+const updateSkills = async (req, res) => {
+  console.log("Called here to update skills");
+  try {
+    const { user_id, freelancerSkills } = req.body;
+    console.log(freelancerSkills);
+    if (!user_id || !Array.isArray(freelancerSkills)) {
+      return res.status(400).json({ error: "Invalid input data" });
+    }
+
+    // Extract skill IDs from freelancerSkills
+    const skillIds = freelancerSkills.map((skill) => skill.skill_id);
+
+    // Step 1: Remove only skills that are NOT in the new list
+    await Freelancer_Skills.destroy({
+      where: {
+        user_id,
+        skill_id: { [Sequelize.Op.notIn]: skillIds }, // Delete skills NOT in the new list
+      },
+    });
+
+    // Step 2: Find existing skills
+    const existingSkills = await Freelancer_Skills.findAll({
+      where: {
+        user_id,
+        skill_id: { [Sequelize.Op.in]: skillIds }, // Keep skills already in the list
+      },
+    });
+
+    const existingSkillIds = existingSkills.map((skill) => skill.skill_id);
+
+    // Step 3: Insert only new skills that are not already present
+    const newSkills = skillIds
+      .filter((skill_id) => !existingSkillIds.includes(skill_id))
+      .map((skill_id) => ({ user_id, skill_id: skill_id }));
+
+    if (newSkills.length > 0) {
+      await Freelancer_Skills.bulkCreate(newSkills);
+    }
+    console.log("DONE UPDATING SKILLS FOR FREELANCER");
+    return res.status(200).json({ message: "Skills updated successfully!" });
+  } catch (error) {
+    console.error("Error updating skills:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 module.exports = {
   UpdateProfile,
@@ -456,4 +550,6 @@ module.exports = {
   insertFoundSkills,
   profileUserWithAI,
   mapResumeSkills,
+  updateCategories,
+  updateSkills,
 };

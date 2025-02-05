@@ -10,6 +10,8 @@ const {
   CreateGig,
   AddGigSkills,
   profileUserWithAI,
+  updateCategories,
+  updateSkills,
   mapResumeSkills,
 } = require("../controllers/FreelancerController");
 const {
@@ -25,8 +27,6 @@ const FreelancerRouter = express.Router();
 const upload = require("../utils/Multer");
 const { uploadResume, uploadGigMedia } = require("../utils/FileUpload");
 const { Freelancer } = require("../utils/InitializeModels");
-const { Freelancer_Skills, Skills } = require("../utils/InitializeModels");
-
 FreelancerRouter.post("/updateProfile", UpdateProfile);
 FreelancerRouter.post(
   "/updateCategories",
@@ -97,4 +97,6 @@ FreelancerRouter.post(
   AddGigSkills
 );
 FreelancerRouter.post("/profileUserWithAI", profileUserWithAI, mapResumeSkills);
+FreelancerRouter.post("/updateCategories", updateCategories);
+FreelancerRouter.post("/updateSkills", updateSkills);
 module.exports = FreelancerRouter;
