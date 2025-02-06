@@ -11,6 +11,7 @@ const {
   Freelancer_Gigs,
   Gig_Categories,
   Gig_Skills,
+  Review,
 } = require("../utils/InitializeModels");
 const sequelize = require("../utils/Connection.js");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -538,6 +539,36 @@ const updateSkills = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+const getFreelancerRatingsGrowth = async (req, res, next) => {
+  const { user_id } = req.query;
+  try {
+    const ratings = await Review.findAll({
+      attributes: [
+        [
+          Sequelize.fn("DATE_FORMAT", Sequelize.col("created_at"), "%Y-%m"),
+          "month",
+        ], // Group by month
+        [Sequelize.fn("AVG", Sequelize.col("rating")), "avg_rating"],
+      ],
+      where: { reviewee_id: user_id }, // Filter by freelancer ID
+      group: [
+        Sequelize.fn("DATE_FORMAT", Sequelize.col("created_at"), "%Y-%m"),
+      ], // Group by month
+      order: [
+        [
+          Sequelize.fn("DATE_FORMAT", Sequelize.col("created_at"), "%Y-%m"),
+          "ASC",
+        ],
+      ], // Sort by month
+      raw: true, // Return plain objects
+    });
+
+    res.status(200).json({ monthlyRatings: ratings });
+  } catch (e) {
+    console.log("Error fetching ratings for freelancers", e);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 module.exports = {
   UpdateProfile,
@@ -552,4 +583,5 @@ module.exports = {
   mapResumeSkills,
   updateCategories,
   updateSkills,
+  getFreelancerRatingsGrowth,
 };

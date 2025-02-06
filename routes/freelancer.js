@@ -13,6 +13,7 @@ const {
   updateCategories,
   updateSkills,
   mapResumeSkills,
+  getFreelancerRatingsGrowth,
 } = require("../controllers/FreelancerController");
 const {
   extractSkills,
@@ -99,4 +100,5 @@ FreelancerRouter.post(
 FreelancerRouter.post("/profileUserWithAI", profileUserWithAI, mapResumeSkills);
 FreelancerRouter.post("/updateCategories", updateCategories);
 FreelancerRouter.post("/updateSkills", updateSkills);
+FreelancerRouter.get("/getFreelancerRatingsGrowth", getFreelancerRatingsGrowth);
 module.exports = FreelancerRouter;
