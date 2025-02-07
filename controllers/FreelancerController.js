@@ -7,6 +7,7 @@ const {
   Bids,
   Job_Postings,
   Skills,
+  Order,
   Gigs,
   Freelancer_Gigs,
   Gig_Categories,
@@ -569,7 +570,45 @@ const getFreelancerRatingsGrowth = async (req, res, next) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+const getFreelacerOrdersGrowth = async (req, res, next) => {
+  const { user_id } = req.query;
+  try {
+    const orders = await Order.findAll({
+      attributes: [
+        [
+          Sequelize.fn("DATE_FORMAT", Sequelize.col("createdAt"), "%Y-%m"),
+          "month",
+        ], // Group by month
+        [Sequelize.fn("COUNT", Sequelize.col("order_id")), "orders"],
+      ],
+      where: {
+        acceptor: user_id,
+        [Sequelize.Op.or]: [
+          { status: "accepted" },
+          {
+            status: "progress",
+          },
+          {
+            status: "complete",
+          },
+        ],
+      }, // Filter by freelancer ID
+      group: [Sequelize.fn("DATE_FORMAT", Sequelize.col("createdAt"), "%Y-%m")], // Group by month
+      order: [
+        [
+          Sequelize.fn("DATE_FORMAT", Sequelize.col("createdAt"), "%Y-%m"),
+          "ASC",
+        ],
+      ], // Sort by month
+      raw: true, // Return plain objects
+    });
 
+    res.status(200).json({ monthlyOrders: orders });
+  } catch (e) {
+    console.log("Error fetching ratings for freelancers", e);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
 module.exports = {
   UpdateProfile,
   UpdateCategories,
@@ -584,4 +623,5 @@ module.exports = {
   updateCategories,
   updateSkills,
   getFreelancerRatingsGrowth,
+  getFreelacerOrdersGrowth,
 };
