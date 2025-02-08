@@ -207,7 +207,7 @@ const FetchProfile = async (req, res, next) => {
 
     // Fetch category names using the IN operator
     const categoryNames = await Category.findAll({
-      attributes: ["category_name","category_id"],
+      attributes: ["category_name", "category_id"],
       where: {
         category_id: {
           [Sequelize.Op.in]: freelancerCategoryIds, // Use IN operator to fetch matching category names
@@ -227,6 +227,51 @@ const FetchProfile = async (req, res, next) => {
     });
   } else {
     // Handle other roles if necessary
+    const fetchedUser = await User.findOne({
+      attributes: [
+        "first_name",
+        "last_name",
+        "email",
+        "role",
+        "profilePic",
+        "created_at",
+        "updated_at",
+      ],
+      where: {
+        user_id,
+      },
+      raw: true,
+    });
+
+    // Fetch the freelancer-specific details
+    const clientDetails = await Client.findOne({
+      where: {
+        user_id,
+      },
+      raw: true,
+    });
+
+    // Fetch completed and progressing orders
+    const completedOrders = await Order.count({
+      where: {
+        creator: user_id,
+        status: "Complete",
+      },
+    });
+
+    const progressingOrder = await Order.count({
+      where: {
+        creator: user_id,
+        status: "Accepted",
+      },
+    });
+    // Returning the response with skill names and category names
+    res.status(201).json({
+      UserDetails: fetchedUser,
+      clientDetails: clientDetails,
+      completedOrders,
+      progressingOrder,
+    });
   }
 };
 

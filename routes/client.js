@@ -4,6 +4,8 @@ const {
   PostingCategory,
   PostingSkills,
   RemovePosting,
+  getClientOrdersGrowth,
+  getClientRatingsGrowth,
 } = require("../controllers/ClientController");
 const express = require("express");
 const WrapAsync = require("../utils/WrapAsync");
@@ -18,6 +20,8 @@ ClientRouter.post(
   WrapAsync(PostingSkills)
 );
 
-ClientRouter.put("/updateProfile", AuthUser, WrapAsync(UpdateClientProfile));
+ClientRouter.post("/updateProfile", AuthUser, WrapAsync(UpdateClientProfile));
 ClientRouter.patch("/removePosting/:job_id", WrapAsync(RemovePosting));
+ClientRouter.get("/getClientRatingsGrowth", WrapAsync(getClientRatingsGrowth));
+ClientRouter.get("/getClientOrdersGrowth", WrapAsync(getClientOrdersGrowth));
 module.exports = ClientRouter;

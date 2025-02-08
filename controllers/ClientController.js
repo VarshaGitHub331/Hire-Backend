@@ -3,16 +3,20 @@ const {
   Job_Postings,
   Job_Categories,
   Job_Skills,
+  Order,
+  Review,
 } = require("../utils/InitializeModels");
-
+const sequelize = require("../utils/Connection.js");
+const { Sequelize } = require("../models/index.js");
+const { response } = require("express");
 const UpdateProfile = async (req, res, next) => {
-  const { contact_number, user_id, company_name } = req.body;
+  const { contact_number, user_id, contact_email, company_name } = req.body;
   if (!user_id) {
     res.status(404).json("User_id cannot be null");
   }
   try {
     const updated = await Client.update(
-      { contact_number, company_name },
+      { contact_number, contact_email, company_name },
       { where: { user_id: user_id } }
     );
     res.status(201).json(updated);
@@ -110,11 +114,81 @@ const RemovePosting = async (req, res, next) => {
     next(e);
   }
 };
+const getClientRatingsGrowth = async (req, res, next) => {
+  const { user_id } = req.query;
+  try {
+    const ratings = await Review.findAll({
+      attributes: [
+        [
+          Sequelize.fn("DATE_FORMAT", Sequelize.col("created_at"), "%Y-%m"),
+          "month",
+        ], // Group by month
+        [Sequelize.fn("AVG", Sequelize.col("rating")), "avg_rating"],
+      ],
+      where: { reviewee_id: user_id }, // Filter by freelancer ID
+      group: [
+        Sequelize.fn("DATE_FORMAT", Sequelize.col("created_at"), "%Y-%m"),
+      ], // Group by month
+      order: [
+        [
+          Sequelize.fn("DATE_FORMAT", Sequelize.col("created_at"), "%Y-%m"),
+          "ASC",
+        ],
+      ], // Sort by month
+      raw: true, // Return plain objects
+    });
 
+    res.status(200).json({ monthlyRatings: ratings });
+  } catch (e) {
+    console.log("Error fetching ratings for freelancers", e);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+const getClientOrdersGrowth = async (req, res, next) => {
+  const { user_id } = req.query;
+  try {
+    const orders = await Order.findAll({
+      attributes: [
+        [
+          Sequelize.fn("DATE_FORMAT", Sequelize.col("createdAt"), "%Y-%m"),
+          "month",
+        ], // Group by month
+        [Sequelize.fn("COUNT", Sequelize.col("order_id")), "orders"],
+      ],
+      where: {
+        creator: user_id,
+        [Sequelize.Op.or]: [
+          { status: "accepted" },
+          {
+            status: "progress",
+          },
+          {
+            status: "complete",
+          },
+        ],
+      }, // Filter by freelancer ID
+      group: [Sequelize.fn("DATE_FORMAT", Sequelize.col("createdAt"), "%Y-%m")], // Group by month
+      order: [
+        [
+          Sequelize.fn("DATE_FORMAT", Sequelize.col("createdAt"), "%Y-%m"),
+          "ASC",
+        ],
+      ], // Sort by month
+      raw: true, // Return plain objects
+    });
+
+    res.status(200).json({ monthlyOrders: orders });
+  } catch (e) {
+    console.log("Error fetching ratings for freelancers", e);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
 module.exports = {
   UpdateClientProfile: UpdateProfile,
   CreatePosting,
   PostingCategory,
   PostingSkills,
   RemovePosting,
+  getClientRatingsGrowth,
+  getClientOrdersGrowth,
 };
