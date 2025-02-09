@@ -24,21 +24,31 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-      budget: {
+      min_budget: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: true,
       },
+      max_budget: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true,
+      },
+
       location: {
         type: DataTypes.STRING(255),
         allowNull: true,
       },
-      duration: {
-        type: DataTypes.STRING(255),
+      job_type: {
+        type: DataTypes.ENUM("Full-time", "Part-time", "Freelance", "Contract"),
         allowNull: true,
       },
       status: {
-        type: DataTypes.ENUM("True", "False"),
+        type: DataTypes.ENUM("Open", "Closed", "Paused"),
         allowNull: false,
+      },
+      experience: {
+        type: DataTypes.ENUM("Entry", "Mid-level", "Senior"),
+        allowNull: true,
+        defaultValue: "Entry",
       },
     },
     {

@@ -41,6 +41,37 @@ Skills:`;
     return null;
   }
 }
+async function extractSkillsFromPosting(req, res, next) {
+  console.log(req.body);
+  const prompt = `
+You are an AI trained to extract skills required for the job from the job description and job title. 
+Only list the skills as a comma-separated string. Do not add any explanation.
+
+Job Description: "${req.body.jobDescription}"
+
+Job Title :"${req.body.jobTitle}"
+
+Skills:`;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "meta/llama-3.1-405b-instruct", // Ensure the model name matches your API
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.0, // Deterministic output
+      top_p: 1.0, // Consider all relevant tokens
+      max_tokens: 100, // Limit to expected token range
+    });
+
+    // Extract and return skills from the model's response
+    const skills = completion.choices[0]?.message?.content.trim().split(",");
+
+    req.body.skills = skills;
+    next();
+  } catch (error) {
+    console.error("Error extracting skills:", error);
+    return null;
+  }
+}
 const findSimilarSkills = async (req, res, next) => {
   const fetchedSkills = req.body.skills;
   const dbSkills = await Skills.findAll({
@@ -66,9 +97,7 @@ const findSimilarSkills = async (req, res, next) => {
   const data = await response.json();
 
   console.log(data.extracted_skills);
-  req.body.extracted_skills = data.extracted_skills;
-
-  next();
+  res.status(200).json({ extracted_skills: data.extracted_skills });
 };
 const findSimilarCategories = async (req, res, next) => {
   console.log("The most similar skill is ", req.body.most_similar_skill);
@@ -374,5 +403,6 @@ module.exports = {
   getFeatures,
   extractCategoriesForTailoredGigs,
   generateTimeLine,
+  extractSkillsFromPosting,
 };
 // Example usage

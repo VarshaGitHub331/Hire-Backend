@@ -7,6 +7,10 @@ const {
   getClientOrdersGrowth,
   getClientRatingsGrowth,
 } = require("../controllers/ClientController");
+const {
+  extractSkillsFromPosting,
+  findSimilarSkills,
+} = require("../controllers/AIControllers");
 const express = require("express");
 const WrapAsync = require("../utils/WrapAsync");
 const { AuthUser } = require("../controllers/UserController");
@@ -14,10 +18,9 @@ const ClientRouter = express.Router();
 
 ClientRouter.post(
   "/createPosting",
-  AuthUser,
   WrapAsync(CreatePosting),
-  WrapAsync(PostingCategory),
-  WrapAsync(PostingSkills)
+  WrapAsync(extractSkillsFromPosting),
+  WrapAsync(findSimilarSkills)
 );
 
 ClientRouter.post("/updateProfile", AuthUser, WrapAsync(UpdateClientProfile));

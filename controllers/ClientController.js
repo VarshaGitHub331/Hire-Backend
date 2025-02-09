@@ -3,6 +3,7 @@ const {
   Job_Postings,
   Job_Categories,
   Job_Skills,
+  Skills,
   Order,
   Review,
 } = require("../utils/InitializeModels");
@@ -25,49 +26,56 @@ const UpdateProfile = async (req, res, next) => {
   }
 };
 const CreatePosting = async (req, res, next) => {
-  /*
-| job_id      | int                  | NO   | PRI | NULL    | auto_increment |
-| user_id     | int                  | YES  | MUL | NULL    |                |
-| title       | varchar(255)         | YES  |     | NULL    |                |
-| description | text                 | YES  |     | NULL    |                |
-| budget      | decimal(10,2)        | YES  |     | NULL    |                |
-| location    | varchar(255)         | YES  |     | NULL    |                |
-| duration    | varchar(255)         | YES  |     | NULL    |                |
-| created_at  | datetime             | YES  |     | NULL    |                |
-| status      | enum('True','False') | NO   |     | NULL    |                |
-| updated_at  | datetime             | YES  |     | NULL    |                |*/
   const {
+    jobLocation,
+    experience,
+    jobTitle,
+    jobType,
+    minSalary,
+    maxSalary,
+    jobDescription,
     user_id,
-    title,
-    description,
-    location,
-    duration,
-    budget,
-    skills,
-    categories,
   } = req.body;
-  if (!user_id || !title || !description || !location || !duration || !budget)
-    res.status(404).json("Please enter proper details for creating posting");
-  if (!req.body.categories || !req.body.skills)
-    res.status(404).json("Please enter job categories and job skills");
-  else {
-    try {
-      const newJob = await Job_Postings.create({
-        user_id,
-        title,
-        description,
-        budget,
-        location,
-        duration,
-        status: "True",
-      });
-      req.body.job_id = newJob.job_id;
-      next();
-    } catch (e) {
-      next(e);
-    }
+
+  if (
+    !user_id ||
+    !jobTitle ||
+    !jobDescription ||
+    !jobLocation ||
+    !minSalary ||
+    !maxSalary
+  ) {
+    return res
+      .status(400)
+      .json({ error: "Please enter proper details for creating posting" });
+  }
+
+  console.log(req.body);
+
+  try {
+    const newJob = await Job_Postings.create({
+      user_id,
+      title: jobTitle,
+      description: jobDescription,
+      min_budget: parseFloat(minSalary), // Convert to number
+      max_budget: parseFloat(maxSalary), // Convert to number
+      job_type: jobType,
+      status: "Open", // Ensure it matches ENUM('True', 'False')
+      location: jobLocation,
+      experience,
+      created_at: new Date(), // Explicitly setting timestamps
+      updated_at: new Date(),
+    });
+    req.body.jobDescription = jobDescription;
+    req.body.jobTitle = jobTitle;
+    req.body.job_id = newJob.job_id;
+    next();
+  } catch (e) {
+    console.log(e);
+    next(e);
   }
 };
+
 const PostingCategory = async (req, res, next) => {
   const { categories, job_id } = req.body;
   console.log(job_id);
@@ -87,21 +95,33 @@ const PostingCategory = async (req, res, next) => {
   next();
 };
 const PostingSkills = async (req, res, next) => {
-  const { skills, job_id } = req.body;
-  for (s of skills) {
-    try {
-      const found = await Job_Skills.findOne({
-        where: { job_id, skill_id: s },
-      });
-      if (!found) {
-        await Job_Skills.create({ job_id, skill_id: s });
-        console.log("Posted Skill");
-      }
-    } catch (e) {
-      next(e);
+  try {
+    const { extracted_skills, job_id } = req.body;
+    console.log("Extracted Skills:", extracted_skills);
+
+    if (!extracted_skills || extracted_skills.length === 0) {
+      return res.status(400).json({ message: "No skills provided" });
     }
+
+    // Find skills where skill_name is in extracted_skills array
+    const jobSkills = await Skills.findAll({
+      where: {
+        skill_name: {
+          [Sequelize.Op.in]: extracted_skills,
+        },
+      },
+    });
+
+    // Insert skills into Job_Skills table
+    for (const skill of jobSkills) {
+      await Job_Skills.create({ skill_id: skill.skill_id, job_id });
+    }
+
+    res.status(200).json({ message: "Extracted skills added successfully" });
+  } catch (error) {
+    console.error("Error processing skills:", error);
+    res.status(500).json({ message: "Internal Server Error", error });
   }
-  next();
 };
 const RemovePosting = async (req, res, next) => {
   console.log("I was called");
