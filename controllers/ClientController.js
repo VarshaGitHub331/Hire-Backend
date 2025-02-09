@@ -35,6 +35,7 @@ const CreatePosting = async (req, res, next) => {
     maxSalary,
     jobDescription,
     user_id,
+    skills,
   } = req.body;
 
   if (
@@ -92,11 +93,11 @@ const PostingCategory = async (req, res, next) => {
       next(e);
     }
   }
-  next();
+  res.status(201).json("Job Posting created successfully");
 };
 const PostingSkills = async (req, res, next) => {
   try {
-    const { extracted_skills, job_id } = req.body;
+    const { skills, job_id } = req.body;
     console.log("Extracted Skills:", extracted_skills);
 
     if (!extracted_skills || extracted_skills.length === 0) {
@@ -111,13 +112,14 @@ const PostingSkills = async (req, res, next) => {
         },
       },
     });
-
+    const categories = [];
     // Insert skills into Job_Skills table
     for (const skill of jobSkills) {
       await Job_Skills.create({ skill_id: skill.skill_id, job_id });
+      categories.push(skill.category_id);
     }
-
-    res.status(200).json({ message: "Extracted skills added successfully" });
+    req.body.categories = categories;
+    next();
   } catch (error) {
     console.error("Error processing skills:", error);
     res.status(500).json({ message: "Internal Server Error", error });

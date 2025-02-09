@@ -17,12 +17,16 @@ const { AuthUser } = require("../controllers/UserController");
 const ClientRouter = express.Router();
 
 ClientRouter.post(
-  "/createPosting",
-  WrapAsync(CreatePosting),
+  "/getSkillsForPosting",
   WrapAsync(extractSkillsFromPosting),
   WrapAsync(findSimilarSkills)
 );
-
+ClientRouter.post(
+  "/createPosting",
+  WrapAsync(CreatePosting),
+  WrapAsync(PostingSkills),
+  WrapAsync(PostingCategory)
+);
 ClientRouter.post("/updateProfile", AuthUser, WrapAsync(UpdateClientProfile));
 ClientRouter.patch("/removePosting/:job_id", WrapAsync(RemovePosting));
 ClientRouter.get("/getClientRatingsGrowth", WrapAsync(getClientRatingsGrowth));
