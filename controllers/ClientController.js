@@ -98,9 +98,8 @@ const PostingCategory = async (req, res, next) => {
 const PostingSkills = async (req, res, next) => {
   try {
     const { skills, job_id } = req.body;
-    console.log("Extracted Skills:", extracted_skills);
 
-    if (!extracted_skills || extracted_skills.length === 0) {
+    if (!skills || skills.length === 0) {
       return res.status(400).json({ message: "No skills provided" });
     }
 
@@ -108,7 +107,7 @@ const PostingSkills = async (req, res, next) => {
     const jobSkills = await Skills.findAll({
       where: {
         skill_name: {
-          [Sequelize.Op.in]: extracted_skills,
+          [Sequelize.Op.in]: skills,
         },
       },
     });
