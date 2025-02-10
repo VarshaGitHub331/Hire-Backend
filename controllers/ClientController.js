@@ -6,6 +6,7 @@ const {
   Skills,
   Order,
   Review,
+  Category,
 } = require("../utils/InitializeModels");
 const sequelize = require("../utils/Connection.js");
 const { Sequelize } = require("../models/index.js");
@@ -76,7 +77,66 @@ const CreatePosting = async (req, res, next) => {
     next(e);
   }
 };
+const getJobPostings = async (req, res, next) => {
+  console.log(req.query);
+  const { user_id, page, limit } = req.query;
+  const results = []; // Extract user_id from the request body
+  const pageNumber = parseInt(page) || 1; // Default to 1 if no page is provided
+  const limitNumber = parseInt(limit) || 3; // Default to 3 if no limit is provided
 
+  // Calculate the offset for pagination: (pageNumber - 1) * limit
+  const offset = (pageNumber - 1) * limitNumber;
+
+  try {
+    const jobResults = await Job_Postings.findAll({
+      where: {
+        user_id,
+      },
+      raw: true,
+      offset: offset, // Apply offset for pagination
+      limit: limitNumber, // Apply limit
+    });
+    for (job of jobResults) {
+      const jobSkills = await Job_Skills.findAll({
+        where: {
+          job_id: job.job_id,
+        },
+        raw: true,
+      });
+      const fetchSkillIds = jobSkills.map((jobSkill) => jobSkill.skill_id);
+      const skillNames = await Skills.findAll({
+        attributes: ["skill_name"],
+        where: {
+          skill_id: {
+            [Sequelize.Op.in]: fetchSkillIds,
+          },
+        },
+      });
+      const jobCategories = await Job_Categories.findAll({
+        where: {
+          job_id: job.job_id,
+        },
+        raw: true,
+      });
+      const FetchCategoriesIds = jobCategories.map(
+        (jobCategory) => jobCategory.category_id
+      );
+      const categoryNames = await Category.findAll({
+        attributes: ["category_name"],
+        where: {
+          category_id: {
+            [Sequelize.Op.in]: FetchCategoriesIds,
+          },
+        },
+      });
+      job.skills = skillNames;
+      job.categories = categoryNames;
+    }
+    res.status(200).json({ jobResults });
+  } catch (e) {
+    next(e); // Pass any error to the next middleware
+  }
+};
 const PostingCategory = async (req, res, next) => {
   const { categories, job_id } = req.body;
   console.log(job_id);
@@ -212,4 +272,5 @@ module.exports = {
   RemovePosting,
   getClientRatingsGrowth,
   getClientOrdersGrowth,
+  getJobPostings,
 };

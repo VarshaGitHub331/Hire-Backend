@@ -6,6 +6,7 @@ const {
   RemovePosting,
   getClientOrdersGrowth,
   getClientRatingsGrowth,
+  getJobPostings,
 } = require("../controllers/ClientController");
 const {
   extractSkillsFromPosting,
@@ -27,6 +28,7 @@ ClientRouter.post(
   WrapAsync(PostingSkills),
   WrapAsync(PostingCategory)
 );
+ClientRouter.get("/getJobPostings", WrapAsync(getJobPostings));
 ClientRouter.post("/updateProfile", AuthUser, WrapAsync(UpdateClientProfile));
 ClientRouter.patch("/removePosting/:job_id", WrapAsync(RemovePosting));
 ClientRouter.get("/getClientRatingsGrowth", WrapAsync(getClientRatingsGrowth));
