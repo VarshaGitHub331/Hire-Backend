@@ -264,6 +264,60 @@ const getClientOrdersGrowth = async (req, res, next) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+const editPosting = async (req, res, next) => {
+  const {
+    location,
+    experience,
+    title,
+    job_type,
+    min_budget,
+    max_budget,
+    description,
+    job_id,
+  } = req.body;
+
+  if (!job_id) {
+    return res.status(400).json({ error: "Job ID is required" });
+  }
+
+  console.log("Editing job:", req.body);
+
+  try {
+    // Update job
+    const [updatedCount] = await Job_Postings.update(
+      {
+        title,
+        description,
+        min_budget: parseFloat(min_budget),
+        max_budget: parseFloat(max_budget),
+        job_type,
+        location,
+        experience,
+        updated_at: new Date(),
+      },
+      {
+        where: { job_id },
+      }
+    );
+
+    if (updatedCount === 0) {
+      return res
+        .status(404)
+        .json({ error: "Job not found or no changes made" });
+    }
+
+    // Fetch and return updated job
+    const updatedJob = await Job_Postings.findOne({
+      where: { job_id },
+    });
+
+    res.status(200).json({ updatedJob });
+  } catch (e) {
+    console.error("Error editing job:", e);
+    next(e);
+  }
+};
+
 module.exports = {
   UpdateClientProfile: UpdateProfile,
   CreatePosting,
@@ -273,4 +327,5 @@ module.exports = {
   getClientRatingsGrowth,
   getClientOrdersGrowth,
   getJobPostings,
+  editPosting,
 };
