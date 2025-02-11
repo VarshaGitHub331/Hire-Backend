@@ -13,6 +13,8 @@ const {
   Gig_Categories,
   Gig_Skills,
   Review,
+  Job_Skills,
+  Job_Categories,
 } = require("../utils/InitializeModels");
 const sequelize = require("../utils/Connection.js");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -609,6 +611,106 @@ const getFreelacerOrdersGrowth = async (req, res, next) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+const JobsForFreelancer = async (req, res, next) => {
+  const { user_id } = req.query;
+
+  try {
+    // Get freelancer's skills
+    const freelancerSkills = await Freelancer_Skills.findAll({
+      attributes: ["skill_id"],
+      where: { user_id },
+      raw: true,
+    });
+
+    const freelancerSkillIds = freelancerSkills.map((skill) => skill.skill_id);
+
+    let jobs;
+
+    if (freelancerSkillIds.length === 0) {
+      // If the freelancer has no skills, return all jobs
+      jobs = await Job_Postings.findAll();
+    } else {
+      // Fetch jobs that match at least one freelancer skill
+      jobs = await Job_Postings.findAll({
+        where: {
+          job_id: {
+            [Sequelize.Op.in]: Sequelize.literal(`
+              (SELECT job_id FROM job_skills WHERE skill_id IN (${freelancerSkillIds.join(
+                ","
+              )}))
+            `),
+          },
+        },
+        raw: true, // Fetch plain objects instead of Sequelize instances
+      });
+    }
+
+    // Get all job IDs from fetched jobs
+    const jobIds = jobs.map((job) => job.job_id);
+
+    if (jobIds.length > 0) {
+      // Fetch all job skills in one query
+      const jobSkills = await Job_Skills.findAll({
+        where: { job_id: { [Sequelize.Op.in]: jobIds } },
+        raw: true,
+      });
+
+      const skillIds = [
+        ...new Set(jobSkills.map((jobSkill) => jobSkill.skill_id)),
+      ];
+
+      // Fetch skill names for the jobs
+      const skillNames = await Skills.findAll({
+        attributes: ["skill_id", "skill_name"],
+        where: { skill_id: { [Sequelize.Op.in]: skillIds } },
+        raw: true,
+      });
+
+      // Fetch all job categories in one query
+      const jobCategories = await Job_Categories.findAll({
+        where: { job_id: { [Sequelize.Op.in]: jobIds } },
+        raw: true,
+      });
+
+      const categoryIds = [
+        ...new Set(jobCategories.map((jc) => jc.category_id)),
+      ];
+
+      // Fetch category names for jobs
+      const categoryNames = await Category.findAll({
+        attributes: ["category_id", "category_name"],
+        where: { category_id: { [Sequelize.Op.in]: categoryIds } },
+        raw: true,
+      });
+
+      // Map skills and categories back to jobs
+      const skillMap = skillNames.reduce((acc, skill) => {
+        acc[skill.skill_id] = skill.skill_name;
+        return acc;
+      }, {});
+
+      const categoryMap = categoryNames.reduce((acc, category) => {
+        acc[category.category_id] = category.category_name;
+        return acc;
+      }, {});
+
+      jobs.forEach((job) => {
+        job.skills = jobSkills
+          .filter((js) => js.job_id === job.job_id)
+          .map((js) => skillMap[js.skill_id]);
+
+        job.categories = jobCategories
+          .filter((jc) => jc.job_id === job.job_id)
+          .map((jc) => categoryMap[jc.category_id]);
+      });
+    }
+
+    res.status(200).json(jobs);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   UpdateProfile,
   UpdateCategories,
@@ -624,4 +726,5 @@ module.exports = {
   updateSkills,
   getFreelancerRatingsGrowth,
   getFreelacerOrdersGrowth,
+  JobsForFreelancer,
 };

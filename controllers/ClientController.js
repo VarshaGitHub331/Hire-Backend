@@ -187,14 +187,26 @@ const PostingSkills = async (req, res, next) => {
 const RemovePosting = async (req, res, next) => {
   console.log("I was called");
   const { job_id } = req.params;
+  const { status } = req.body;
+
   try {
-    const job = await Job_Postings.findOne({ where: { job_id: job_id } });
-    job.status = false;
-    res.status(200).json("Posting removed");
+    const job = await Job_Postings.findOne({ where: { job_id } });
+
+    if (!job) {
+      return res.status(404).json({ error: "Job posting not found" }); // ✅ Handle missing job case
+    }
+
+    await Job_Postings.update(
+      { status },
+      { where: { job_id } } // ✅ Correctly updates the database
+    );
+    const newJob = await Job_Postings.findOne({ where: { job_id }, raw: true });
+    res.status(200).json({ newJob });
   } catch (e) {
     next(e);
   }
 };
+
 const getClientRatingsGrowth = async (req, res, next) => {
   const { user_id } = req.query;
   try {
