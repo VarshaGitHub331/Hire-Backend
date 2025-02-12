@@ -2,15 +2,13 @@ const db = require("../models"); // Assuming models are correctly imported
 const sequelize = require("../models");
 
 const {
+  Category,
   User,
   Freelancer,
   Client,
-  Category,
   Skills,
   Gigs,
   Gig_Skills,
-  Order,
-  Review,
   Freelancer_Gigs,
   Freelancer_Category,
   Freelancer_Ratings,
@@ -26,6 +24,8 @@ const {
   Freelancer_Skills,
   Order_Timeline,
   Client_Ratings,
+  Order,
+  Review,
 } = db;
 
 module.exports = {

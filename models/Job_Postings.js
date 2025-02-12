@@ -1,3 +1,6 @@
+const { Job_Categories } = require("../utils/InitializeModels");
+const Job_Skills = require("./Job_Skills");
+
 module.exports = (sequelize, DataTypes) => {
   const Job_Postings = sequelize.define(
     "Job_Postings",
@@ -67,18 +70,12 @@ module.exports = (sequelize, DataTypes) => {
 
     // Job-Category and Job-Skill associations
     Job_Postings.belongsToMany(models.Skills, {
-      through: "job_skills",
+      through: models.Job_Skills,
       foreignKey: "job_id",
     });
     Job_Postings.belongsToMany(models.Category, {
-      through: "job_categories",
+      through: models.Job_Categories,
       foreignKey: "job_id",
-    });
-
-    // Associations with 'Order' and 'Bids' using 'job_id' foreign key
-    Job_Postings.hasOne(models.Order, {
-      foreignKey: "job_id", // Foreign key in Orders table
-      as: "order",
     });
 
     Job_Postings.hasMany(models.Bids, {

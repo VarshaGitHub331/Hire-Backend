@@ -28,6 +28,10 @@ module.exports = (sequelize, DataTypes) => {
     Category.hasMany(models.Skills, {
       foreignKey: "category_id",
     });
+    Category.belongsToMany(models.Job_Postings, {
+      through: models.Job_Categories,
+      foreignKey: "category_id",
+    });
   };
 
   return Category;

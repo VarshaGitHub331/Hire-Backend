@@ -183,9 +183,10 @@ Craft the most optimized and compelling gig title possible. Return only the titl
   }
 };
 const extractClientRequirements = async (req, res, next) => {
+  console.log("HEREEEE FOR CLIENT TEXTTTTT TATHS");
   const clientText = req.body.clientText;
-
-  if (!clientText) {
+  console.log("The requirements are ", clientText);
+  if (clientText == null) {
     return next(); // Proceed to the next middleware if no client text is provided
   }
 
@@ -306,7 +307,10 @@ const getFeatures = async (req, res) => {
   }
 };
 const extractCategoriesForTailoredGigs = async (req, res, next) => {
-  if (!req.body.skills) next();
+  if (req.body.clientText == null) {
+    console.log("I am leaving");
+    return next();
+  }
   console.log("The most similar skill is ", req.body.most_similar_skill);
   const fetchedSkills = req.body.skills;
   const dbSkills = await Skills.findAll({
