@@ -70,7 +70,7 @@ const LoginUser = async (req, res, next) => {
   try {
     // Find the user by email
     const user = await User.findOne({
-      where: { email: "varsha@sud" },
+      where: { email },
       attributes: [
         "user_id",
         "email",

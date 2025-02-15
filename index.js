@@ -44,6 +44,7 @@ const dataRouter = require("./routes/Data.js");
 const gigRouter = require("./routes/gigs.js");
 const conversationRouter = require("./routes/Conversation.js");
 const reviewRouter = require("./routes/review.js");
+const ApplicantRouter = require("./routes/Applicant.js");
 app.use("/user", UserRouter);
 app.use("/freelancer", FreelancerRouter);
 app.use("/client", ClientRouter);
@@ -52,7 +53,7 @@ app.use("/data", dataRouter);
 app.use("/gigs", gigRouter);
 app.use("/conversation", conversationRouter);
 app.use("/reviews", reviewRouter);
-
+app.use("/applicants", ApplicantRouter);
 // Start the server
 server.listen(3001, () => {
   console.log("Server listening at http://localhost:3001");

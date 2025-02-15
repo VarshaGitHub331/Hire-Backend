@@ -1,10 +1,21 @@
 require("dotenv").config({ path: "../.env" });
 const axios = require("axios");
-const { Skills, Category } = require("../utils/InitializeModels");
+const {
+  Skills,
+  Category,
+  User,
+  Job_Postings,
+  Job_Skills,
+  Freelancer,
+  Freelancer_Gigs,
+  Freelancer_Skills,
+  Gigs,
+} = require("../utils/InitializeModels");
 
 // Set up your Hugging Face API key and model
 const API_KEY = process.env.NVIDIA_API_KEY; // Replace with your actual API key
 const OpenAI = require("openai");
+const { Sequelize } = require("../models");
 
 const openai = new OpenAI({
   apiKey: `${API_KEY}`, // Replace with your OpenAI API key
@@ -398,6 +409,121 @@ const generateTimeLine = async (req, res, next) => {
       .json({ error: "Feature generation failed. Please try again." });
   }
 };
+const generateAIProposal = async (req, res, next) => {
+  console.log(req.body);
+  const { user_id, job } = req.body;
+
+  try {
+    // Fetch user, freelancer, and related data
+    const [user, freelancer, freelancerGigs, freelancerSkills] =
+      await Promise.all([
+        User.findOne({
+          attributes: ["first_name"],
+          where: { user_id },
+          raw: true,
+        }),
+        Freelancer.findOne({ where: { user_id }, raw: true }),
+        Freelancer_Gigs.findAll({
+          where: { user_id },
+          attributes: ["gig_id"],
+          raw: true,
+        }),
+        Freelancer_Skills.findAll({
+          where: { user_id },
+          attributes: ["skill_id"],
+          raw: true,
+        }),
+      ]);
+
+    if (!user || !freelancer) {
+      return res
+        .status(404)
+        .json({ error: "User or freelancer profile not found." });
+    }
+
+    // Extract gig and skill IDs
+    const gigIds = freelancerGigs.map((gig) => gig.gig_id);
+    const skillIds = freelancerSkills.map((skill) => skill.skill_id);
+
+    // Fetch gig and skill details
+    const [gigs, skills] = await Promise.all([
+      Gigs.findAll({
+        where: { gig_id: { [Sequelize.Op.in]: gigIds } },
+        attributes: ["title"],
+        raw: true,
+      }),
+      Skills.findAll({
+        where: { skill_id: { [Sequelize.Op.in]: skillIds } },
+        attributes: ["skill_name"],
+        raw: true,
+      }),
+    ]);
+
+    // Handle missing skills/gigs gracefully
+    const gigTitles = gigs.length
+      ? gigs.map((gig) => gig.title).join(", ")
+      : "N/A";
+    const skillNames = skills.length
+      ? skills.map((skill) => skill.skill_name).join(", ")
+      : "N/A";
+
+    console.log(gigTitles, skillNames);
+
+    // Construct AI prompt
+    const prompt = `
+You are an AI trained to write **highly engaging, personalized job proposals in HTML format**.  
+
+**Instructions:**  
+- **Make it catchy** with a compelling hook.  
+- **Use bullet points** for clarity.  
+- **Incorporate formatting** (*italics*, **bold**, etc.) to highlight key skills.  
+- **Avoid greetings and salutions**
+- Use <b>${user.first_name}</b>’s name in the closing.  
+- Focus on **relevant skills, projects, and experience** related to **${
+      job.title
+    }**.  
+- Keep it **concise (max 200 words)**, professional, and compelling.  
+
+**Freelancer Details:**  
+- **Name:** ${user.first_name}  
+- **Skills:** ${
+      skillNames !== "N/A"
+        ? skillNames
+        : "versatile software development skills"
+    }  
+- **Gigs:** ${gigTitles !== "N/A" ? gigTitles : "various software projects"}  
+
+**Job Details:**  
+- **Title:** ${job.title}  
+- **Description:** ${job.description}  
+
+Generate a **short, professional HTML proposal** that is engaging and well-structured.
+`;
+
+    // AI API Call
+    const completion = await openai.chat.completions.create({
+      model: "meta/llama-3.1-405b-instruct", // Ensure this is a valid model
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_tokens: 500,
+    });
+
+    // Extract AI response with validation
+    const responseContent = completion?.choices?.[0]?.message?.content?.trim();
+    if (!responseContent) {
+      throw new Error("AI did not return a valid response.");
+    }
+
+    console.log("AI Proposal Response (HTML):", responseContent);
+
+    // Send response to frontend
+    return res.status(200).json({ proposal: responseContent });
+  } catch (error) {
+    console.error("Error generating proposal:", error.message);
+    next(error); // Use Express error handling
+  }
+};
+
 module.exports = {
   extractSkills,
   findSimilarSkills,
@@ -408,5 +534,6 @@ module.exports = {
   extractCategoriesForTailoredGigs,
   generateTimeLine,
   extractSkillsFromPosting,
+  generateAIProposal,
 };
 // Example usage
