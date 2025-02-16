@@ -36,6 +36,11 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "applicant_id", // Use the correct foreign key reference here
       constraints: true,
     });
+    Applicants.hasMany(models.Bids, {
+      foreignKey: "bidder_id", // The column in `Bids` referencing `Applicants`
+      sourceKey: "applicant_id", // The column in `Applicants` being referenced
+      constraints: true,
+    });
   };
 
   return Applicants;

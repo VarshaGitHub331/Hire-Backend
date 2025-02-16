@@ -114,7 +114,6 @@ const fetchClientOrders = async (req, res, next) => {
         "order_id",
         "creator",
         "acceptor",
-        "job_posting_id",
         "gig_id",
         "status",
         "payable",
@@ -172,7 +171,6 @@ const fetchFreelancerOrders = async (req, res, next) => {
         "order_id",
         "creator",
         "acceptor",
-        "job_posting_id",
         "payable",
         "notes",
         "gig_id",
@@ -264,7 +262,6 @@ const getOrder = async (req, res, next) => {
         "order_id",
         "creator",
         "acceptor",
-        "job_posting_id",
         "payable",
         "notes",
         "gig_id",
@@ -313,11 +310,16 @@ const getOrder = async (req, res, next) => {
     const features = gig.features;
     const title = gig.title;
     const packageFeatures =
-      fetchedOrder.package == "Basic"
+      gig && fetchedOrder.package === "Basic"
         ? []
-        : fetchedOrder.package == "Standard"
-        ? gig.standard_features
-        : [...gig.standard_features, ...gig.advanced_features];
+        : gig && fetchedOrder.package === "Standard"
+        ? JSON.parse(gig.standard_features || "[]")
+        : gig
+        ? [
+            ...JSON.parse(gig.standard_features || "[]"),
+            ...JSON.parse(gig.advanced_features || "[]"),
+          ]
+        : [];
 
     // Construct the order details response
     const orderDetails = {

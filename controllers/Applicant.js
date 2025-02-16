@@ -1,4 +1,9 @@
-const { Applicants, Bids } = require("../utils/InitializeModels");
+const {
+  Applicants,
+  Bids,
+  Freelancer,
+  User,
+} = require("../utils/InitializeModels");
 
 const becomeApplicant = async (req, res, next) => {
   try {
@@ -45,5 +50,94 @@ const becomeApplicant = async (req, res, next) => {
     res.status(500).json({ error: error.message || "Internal Server Error" });
   }
 };
+const getApplicants = async (req, res, next) => {
+  try {
+    const { job_id, page = 1, pageSize = 10 } = req.query;
 
-module.exports = { becomeApplicant };
+    if (!job_id) {
+      return res.status(400).json({ message: "job_id is required" });
+    }
+    const limit = parseInt(pageSize); // Items per page
+    const offset = (parseInt(page) - 1) * limit; // Skip items
+    const applicantResults = await Applicants.findAll({
+      include: [
+        {
+          model: Freelancer,
+
+          include: [
+            {
+              model: User,
+              attributes: ["first_name"],
+            },
+          ],
+        },
+        {
+          model: Bids,
+          foreignKey: "applicant_id",
+          where: {
+            job_posting_id: job_id,
+          },
+        },
+      ],
+      where: {
+        job_id,
+      },
+      limit,
+      offset,
+    });
+
+    // Format the response to remove unnecessary Sequelize metadata
+
+    res.status(200).json(applicantResults);
+  } catch (e) {
+    next(e);
+  }
+};
+const acceptProposal = async (req, res, next) => {
+  try {
+    const { bid_id } = req.body; // Changed from req.query to req.body
+    console.log("Accepting bid with ID:", bid_id);
+
+    const result = await Bids.update(
+      { bid_status: "accepted" },
+      { where: { bidId: bid_id } }
+    );
+
+    if (result[0] === 0) {
+      return res.status(404).json({ message: "Bid not found" });
+    }
+
+    res.status(200).json({ message: "Your proposal was accepted" });
+  } catch (error) {
+    console.error("Error accepting proposal:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const rejectProposal = async (req, res, next) => {
+  try {
+    const { bid_id } = req.body; // Changed from req.query to req.body
+    console.log("Rejecting bid with ID:", bid_id);
+
+    const result = await Bids.update(
+      { bid_status: "rejected" },
+      { where: { bidId: bid_id } }
+    );
+
+    if (result[0] === 0) {
+      return res.status(404).json({ message: "Bid not found" });
+    }
+
+    res.status(200).json({ message: "Your proposal was rejected" }); // Fixed success message
+  } catch (error) {
+    console.error("Error rejecting proposal:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = {
+  becomeApplicant,
+  getApplicants,
+  acceptProposal,
+  rejectProposal,
+};

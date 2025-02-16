@@ -63,6 +63,7 @@ module.exports = (sequelize, DataTypes) => {
     });
     Bids.belongsTo(models.Applicants, {
       foreignKey: "bidder_id",
+      targetKey: "applicant_id",
       constraints: true,
     });
     Bids.belongsTo(models.Client, {
