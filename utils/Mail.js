@@ -35,5 +35,20 @@ const sendMail = async (to, orderId, subject, text, html) => {
     console.error("Error sending email:", error);
   }
 };
+const sendProposalConfirmationMail = async (to, subject, text, html) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER, // Sender's email address
+      to: to, // Recipient's email address
+      subject: subject, // Email subject
+      text: text, // Plain text body
+      html: `<div><p>${text} </p>`,
+    };
 
-module.exports = { sendMail };
+    await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully to:", to);
+  } catch (error) {
+    console.error("Error sending email:", error);
+  }
+};
+module.exports = { sendMail, sendProposalConfirmationMail };
