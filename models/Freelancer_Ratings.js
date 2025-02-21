@@ -39,6 +39,10 @@ module.exports = (Sequelize, DataTypes) => {
       tableName: "freelancer_ratings",
     }
   );
-
+  Freelancer_Ratings.associate = (models) => {
+    Freelancer_Ratings.belongsTo(models.Freelancer, {
+      foreignKey: "freelancer_id",
+    });
+  };
   return Freelancer_Ratings;
 };

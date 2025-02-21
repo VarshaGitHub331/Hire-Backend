@@ -13,8 +13,10 @@ const {
   Gig_Categories,
   Gig_Skills,
   Review,
+  User,
   Job_Skills,
   Job_Categories,
+  Freelancer_Ratings,
 } = require("../utils/InitializeModels");
 const sequelize = require("../utils/Connection.js");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -678,6 +680,66 @@ const JobsForFreelancer = async (req, res, next) => {
     next(error);
   }
 };
+const fetchFreelancerProfile = async (req, res, next) => {
+  const { user_id } = req.query;
+  console.log(user_id);
+  try {
+    const UserProfile = await Freelancer.findOne({
+      where: {
+        user_id,
+      },
+      include: [
+        {
+          model: User,
+          required: true, // Optional: Ensures inner join
+          attributes: ["first_name", "last_name"],
+          include: {
+            model: Freelancer_Skills,
+            include: [
+              {
+                model: Skills,
+                attributes: ["skill_name"],
+              },
+            ],
+          },
+        },
+        {
+          model: Freelancer_Ratings,
+        },
+      ],
+    });
+    res.status(200).json({ UserProfile });
+  } catch (e) {
+    next(e);
+  }
+};
+const fetchFreelancerReviews = async (req, res, next) => {
+  try {
+    const { user_id } = req.query;
+    console.log(user_id);
+
+    const reviews = await Review.findAll({
+      where: { reviewee_id: user_id },
+      raw: true,
+    });
+
+    for (const review of reviews) {
+      const reviewer_id = review.reviewer_id;
+      const user = await User.findOne({
+        attributes: ["first_name"],
+        where: { user_id: reviewer_id },
+        raw: true,
+      });
+
+      // Add the reviewer's name to the review object
+      review.reviewer_name = user ? user.first_name : "Anonymous";
+    }
+
+    res.status(200).json(reviews);
+  } catch (e) {
+    next(e);
+  }
+};
 
 module.exports = {
   UpdateProfile,
@@ -695,4 +757,6 @@ module.exports = {
   getFreelancerRatingsGrowth,
   getFreelacerOrdersGrowth,
   JobsForFreelancer,
+  fetchFreelancerProfile,
+  fetchFreelancerReviews,
 };

@@ -41,6 +41,9 @@ module.exports = (sequelize, DataTypes) => {
     Freelancer.belongsTo(models.User, {
       foreignKey: "user_id", // Column in this table that references the users table
     });
+    Freelancer.hasOne(models.Freelancer_Ratings, {
+      foreignKey: "freelancer_id",
+    });
   };
 
   return Freelancer;

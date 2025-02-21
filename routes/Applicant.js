@@ -4,6 +4,7 @@ const {
   acceptProposal,
   rejectProposal,
   sendConfirmationMails,
+  ViewProposals,
 } = require("../controllers/Applicant");
 const { generateAIProposal } = require("../controllers/AIControllers");
 const express = require("express");
@@ -24,4 +25,5 @@ ApplicantRouter.patch(
   WrapAsync(rejectProposal),
   WrapAsync(sendConfirmationMails)
 );
+ApplicantRouter.get("/myProposals", WrapAsync(ViewProposals));
 module.exports = ApplicantRouter;

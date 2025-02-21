@@ -35,6 +35,14 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "User", // Specify the table name if it's different
     }
   );
+  User.associate = (models) => {
+    User.hasOne(models.Freelancer, {
+      foreignKey: "user_id", // Column in this table that references the users table
+    });
+    User.hasMany(models.Freelancer_Skills, {
+      foreignKey: "user_id",
+    });
+  };
 
   return User;
 };

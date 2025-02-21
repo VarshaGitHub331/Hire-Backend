@@ -68,7 +68,7 @@ const getApplicants = async (req, res, next) => {
           include: [
             {
               model: User,
-              attributes: ["first_name"],
+              attributes: ["first_name", "last_name", "email"],
             },
           ],
         },
@@ -203,11 +203,37 @@ const sendConfirmationMails = async (req, res, next) => {
     next(e);
   }
 };
-
+const ViewProposals = async (req, res, next) => {
+  const { user_id, page = 1, pageSize = 10 } = req.query;
+  const limit = parseInt(pageSize); // Items per page
+  const offset = (parseInt(page) - 1) * limit; // Skip items
+  try {
+    const myProposals = await Bids.findAll(
+      {
+        include: [
+          {
+            model: Job_Postings,
+            attributes: ["title", "job_id"],
+          },
+        ],
+        where: {
+          bidder_id: user_id,
+        },
+      },
+      { raw: true },
+      limit,
+      offset
+    );
+    res.status(200).json(myProposals);
+  } catch (e) {
+    next(e);
+  }
+};
 module.exports = {
   becomeApplicant,
   getApplicants,
   acceptProposal,
   rejectProposal,
   sendConfirmationMails,
+  ViewProposals,
 };

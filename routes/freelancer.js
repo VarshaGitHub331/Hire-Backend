@@ -16,6 +16,8 @@ const {
   getFreelancerRatingsGrowth,
   getFreelacerOrdersGrowth,
   JobsForFreelancer,
+  fetchFreelancerProfile,
+  fetchFreelancerReviews,
 } = require("../controllers/FreelancerController");
 const {
   extractSkills,
@@ -105,4 +107,9 @@ FreelancerRouter.post("/updateSkills", updateSkills);
 FreelancerRouter.get("/getFreelancerRatingsGrowth", getFreelancerRatingsGrowth);
 FreelancerRouter.get("/getFreelancerOrdersGrowth", getFreelacerOrdersGrowth);
 FreelancerRouter.get("/jobsForFreelancer", JobsForFreelancer);
+FreelancerRouter.get("/fetchFreelancerProfile", fetchFreelancerProfile);
+FreelancerRouter.get(
+  "/fetchFreelancerReviews",
+  WrapAsync(fetchFreelancerReviews)
+);
 module.exports = FreelancerRouter;
