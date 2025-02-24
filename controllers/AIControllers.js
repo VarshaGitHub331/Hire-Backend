@@ -523,7 +523,55 @@ Generate a **short, professional HTML proposal** that is engaging and well-struc
     next(error); // Use Express error handling
   }
 };
+const generateAIDescription = async (req, res, next) => {
+  try {
+    const { title, features, standardFeatures, advancedFeatures } = req.body;
+    const prompt = `
+  You are an AI trained to suggest a gig description based on the gig's title,basic features,standard features of a gig(if provided) and advanced features of a gig(if provided).
+  - Return only gig description as a json object with no other  additional preceeding or succeeding information. 
+  features:${features}
+  standardFeatures:${standardFeatures}
+  advancedFeatures:${advancedFeatures}
+  title:${title}
+`;
 
+    try {
+      // Make the API call to OpenAI
+      const completion = await openai.chat.completions.create({
+        model: "meta/llama-3.1-405b-instruct", // Replace with the appropriate model
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.0,
+        top_p: 1.0,
+        max_tokens: 150, // Adjust token limit as needed
+      });
+
+      // Extract the response content
+      const responseContent = completion.choices[0]?.message?.content.trim();
+      console.log("AI Response:", responseContent);
+
+      // Attempt to parse the response as JSON
+      let gigDescription;
+      try {
+        gigDescription = JSON.parse(responseContent);
+      } catch (parseError) {
+        console.error("Parsing error:", parseError.message);
+        return res.status(500).json({
+          error: "Invalid response format from AI. Please try again.",
+        });
+      }
+
+      // Send the validated array to the frontend
+      res.status(200).json(gigDescription);
+    } catch (error) {
+      console.error("Error generating features:", error.message);
+      res
+        .status(500)
+        .json({ error: "Feature generation failed. Please try again." });
+    }
+  } catch (e) {
+    next(e);
+  }
+};
 module.exports = {
   extractSkills,
   findSimilarSkills,
@@ -535,5 +583,6 @@ module.exports = {
   generateTimeLine,
   extractSkillsFromPosting,
   generateAIProposal,
+  generateAIDescription,
 };
 // Example usage

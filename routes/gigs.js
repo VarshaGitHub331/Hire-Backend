@@ -12,6 +12,7 @@ const {
   extractClientRequirements,
   findSimilarCategories,
   getFeatures,
+  generateAIDescription,
 } = require("../controllers/AIControllers.js");
 const WrapAsync = require("../utils/WrapAsync.js");
 const {
@@ -35,4 +36,5 @@ gigRouter.put(
   WrapAsync(EditFeauturesBudget),
   WrapAsync(FetchGig)
 );
+gigRouter.post("/generateAIDescription", WrapAsync(generateAIDescription));
 module.exports = gigRouter;

@@ -683,7 +683,9 @@ const JobsForFreelancer = async (req, res, next) => {
 const fetchFreelancerProfile = async (req, res, next) => {
   const { user_id } = req.query;
   console.log(user_id);
+
   try {
+    // Fetching the User Profile
     const UserProfile = await Freelancer.findOne({
       where: {
         user_id,
@@ -691,7 +693,7 @@ const fetchFreelancerProfile = async (req, res, next) => {
       include: [
         {
           model: User,
-          required: true, // Optional: Ensures inner join
+          required: true,
           attributes: ["first_name", "last_name"],
           include: {
             model: Freelancer_Skills,
@@ -708,18 +710,64 @@ const fetchFreelancerProfile = async (req, res, next) => {
         },
       ],
     });
-    res.status(200).json({ UserProfile });
+
+    // Return 404 if no profile is found
+    if (!UserProfile) {
+      return res.status(404).json({ message: "Freelancer not found" });
+    }
+
+    // Convert Sequelize instance to plain object
+    const userProfileObj = UserProfile.toJSON();
+
+    // Count Total Ratings
+    const totalRatings = await Review.count({
+      where: {
+        reviewee_id: user_id,
+      },
+    });
+
+    // Count High Ratings (Greater than 3)
+    const highRatingsCount = await Review.count({
+      where: {
+        reviewee_id: user_id,
+        rating: {
+          [Sequelize.Op.gt]: 3,
+        },
+      },
+    });
+
+    // Calculate Percentage
+    const highRatingsPercentage =
+      totalRatings > 0 ? (highRatingsCount / totalRatings) * 100 : 0;
+
+    // Determine isTopRated (Threshold: 70% or more high ratings)
+    userProfileObj.isTopRated = highRatingsPercentage >= 70;
+
+    // Sending Response
+    res.status(200).json({ UserProfile: userProfileObj });
   } catch (e) {
     next(e);
   }
 };
+
 const fetchFreelancerReviews = async (req, res, next) => {
   try {
-    const { user_id } = req.query;
+    const { user_id, page, limit } = req.query;
     console.log(user_id);
+    const pageNumber = parseInt(page) || 1; // Default to 1 if no page is provided
+    const limitNumber = parseInt(limit) || 3; // Default to 3 if no limit is provided
 
+    // Calculate the offset for pagination: (pageNumber - 1) * limit
+    const offset = (pageNumber - 1) * limitNumber;
     const reviews = await Review.findAll({
       where: { reviewee_id: user_id },
+      include: [
+        {
+          model: Order,
+        },
+      ],
+      offset,
+      limit: limitNumber,
       raw: true,
     });
 
@@ -759,4 +807,5 @@ module.exports = {
   JobsForFreelancer,
   fetchFreelancerProfile,
   fetchFreelancerReviews,
+ 
 };
