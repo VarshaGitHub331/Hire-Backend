@@ -7,6 +7,7 @@ const {
   DeleteGig,
   FetchAllGigs,
   EditFeauturesBudget,
+  fetchTopRatedGigs,
 } = require("../controllers/GigControllers");
 const {
   extractClientRequirements,
@@ -37,4 +38,5 @@ gigRouter.put(
   WrapAsync(FetchGig)
 );
 gigRouter.post("/generateAIDescription", WrapAsync(generateAIDescription));
+gigRouter.get("/fetchTopRatedGigs", WrapAsync(fetchTopRatedGigs));
 module.exports = gigRouter;

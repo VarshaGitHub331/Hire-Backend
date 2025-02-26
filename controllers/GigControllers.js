@@ -8,7 +8,9 @@ const {
   Category,
   Skills,
   Freelancer_Ratings,
+
   User,
+  Freelancer,
 } = require("../utils/InitializeModels");
 const { Sequelize } = require("../models");
 
@@ -364,6 +366,83 @@ const EditFeauturesBudget = async (req, res, next) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+const fetchTopRatedGigs = async (req, res) => {
+  try {
+    const gigResults = [];
+    const categories = await Category.findAll({
+      attributes: ["category_id"],
+      raw: true,
+    });
+    for (category of categories) {
+      const catGigs = await Gig_Categories.findAll({
+        where: {
+          category_id: category.category_id,
+        },
+        include: [
+          {
+            model: Gigs,
+            include: [
+              {
+                model: Freelancer_Gigs,
+
+                include: [
+                  {
+                    model: Freelancer,
+                    include: [
+                      {
+                        model: Freelancer_Ratings,
+                      },
+                    ],
+                  },
+                  {
+                    model: User,
+                    attributes: ["first_name"],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            model: Category,
+            attributes: ["category_name"],
+          },
+        ],
+      });
+      const validGigs = catGigs.filter(
+        (gig) =>
+          gig.Gig && gig.Gig.Freelancer_Gig && gig.Gig.Freelancer_Gig.User
+      );
+      const flattenedGigs = validGigs.map((gig) => ({
+        category_id: gig.category_id,
+        gig_id: gig.gig_id,
+        gigImage: gig.Gig.picture[0],
+        category_name: gig.Category.category_name,
+        freelancer_name: gig.Gig.Freelancer_Gig.User.first_name,
+        total_rating:
+          gig.Gig.Freelancer_Gig.Freelancer.Freelancer_Rating?.total_rating ||
+          0,
+        rating_count:
+          gig.Gig.Freelancer_Gig.Freelancer.Freelancer_Rating?.rating_count ||
+          0,
+      }));
+      const topRatedGig = flattenedGigs.reduce((topGig, currentGig) => {
+        return currentGig.total_rating > (topGig?.total_rating || 0)
+          ? currentGig
+          : topGig;
+      }, null);
+      gigResults.push(topRatedGig);
+    }
+
+    res.status(200).json(gigResults);
+  } catch (error) {
+    console.error("Error fetching top-rated gigs:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch top-rated gigs",
+      error: error.message,
+    });
+  }
+};
 
 module.exports = {
   FetchGigs,
@@ -372,4 +451,5 @@ module.exports = {
   DeleteGig,
   FetchAllGigs,
   EditFeauturesBudget,
+  fetchTopRatedGigs,
 };

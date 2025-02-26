@@ -22,6 +22,9 @@ module.exports = (sequelize, DataTypes) => {
     Freelancer_Gigs.belongsTo(models.Gigs, {
       foreignKey: "gig_id",
     });
+    Freelancer_Gigs.belongsTo(models.Freelancer, {
+      foreignKey: "user_id",
+    });
   };
   return Freelancer_Gigs;
 };
