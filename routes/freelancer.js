@@ -41,7 +41,7 @@ FreelancerRouter.post(
 FreelancerRouter.post("/addSkills", AuthUser, WrapAsync(AddSkills));
 FreelancerRouter.post(
   "/bidPosting",
-  // AuthUser,
+  AuthUser,
   WrapAsync(BidPosting),
   WrapAsync(BidDetails)
 );
@@ -77,6 +77,7 @@ FreelancerRouter.post(
 
 FreelancerRouter.get(
   "/profileUser",
+  AuthUser,
   WrapAsync(extractSkills),
   WrapAsync(findSimilarSkills),
   WrapAsync(insertFoundSkills)
@@ -84,11 +85,13 @@ FreelancerRouter.get(
 
 FreelancerRouter.post(
   "/recommendCategories",
+  AuthUser,
   WrapAsync(extractSkills),
   WrapAsync(findSimilarCategories)
 );
 FreelancerRouter.post(
   "/getGigInfo",
+  AuthUser,
   WrapAsync(extractGigTitle),
   WrapAsync(extractSkills),
   WrapAsync(findSimilarCategories),
@@ -96,20 +99,39 @@ FreelancerRouter.post(
 );
 FreelancerRouter.post(
   "/makeGig",
+  AuthUser,
   upload.array("gigImages", 5),
   uploadGigMedia,
   CreateGig,
   AddGigSkills
 );
-FreelancerRouter.post("/profileUserWithAI", profileUserWithAI, mapResumeSkills);
-FreelancerRouter.post("/updateCategories", updateCategories);
-FreelancerRouter.post("/updateSkills", updateSkills);
-FreelancerRouter.get("/getFreelancerRatingsGrowth", getFreelancerRatingsGrowth);
-FreelancerRouter.get("/getFreelancerOrdersGrowth", getFreelacerOrdersGrowth);
-FreelancerRouter.get("/jobsForFreelancer", JobsForFreelancer);
-FreelancerRouter.get("/fetchFreelancerProfile", fetchFreelancerProfile);
+FreelancerRouter.post(
+  "/profileUserWithAI",
+  AuthUser,
+  profileUserWithAI,
+  mapResumeSkills
+);
+FreelancerRouter.post("/updateCategories", AuthUser, updateCategories);
+FreelancerRouter.post("/updateSkills", AuthUser, updateSkills);
+FreelancerRouter.get(
+  "/getFreelancerRatingsGrowth",
+  AuthUser,
+  getFreelancerRatingsGrowth
+);
+FreelancerRouter.get(
+  "/getFreelancerOrdersGrowth",
+  AuthUser,
+  getFreelacerOrdersGrowth
+);
+FreelancerRouter.get("/jobsForFreelancer", AuthUser, JobsForFreelancer);
+FreelancerRouter.get(
+  "/fetchFreelancerProfile",
+  AuthUser,
+  fetchFreelancerProfile
+);
 FreelancerRouter.get(
   "/fetchFreelancerReviews",
+  AuthUser,
   WrapAsync(fetchFreelancerReviews)
 );
 module.exports = FreelancerRouter;

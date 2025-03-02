@@ -7,7 +7,9 @@ const {
   Applicants,
   Bids,
   Job_Postings,
+  Gig_Categories,
   Skills,
+  Order,
 } = require("../utils/InitializeModels");
 
 async function FetchCategories(req, res, next) {
@@ -77,5 +79,36 @@ const FetchSkills = async (req, res, next) => {
     next(e);
   }
 };
-
-module.exports = { FetchCategories, FetchSkills, FetchAllSkils };
+const fetchPopularCategories = async (req, res, next) => {
+  try {
+    const popularCategories = await Gig_Categories.findAll({
+      attributes: [
+        "category_id",
+        [Sequelize.fn("COUNT", Sequelize.col("gig_id")), "popularity"],
+      ],
+      where: {
+        createdAt: {
+          [Sequelize.Op.gt]: Sequelize.literal("NOW() - INTERVAL 30 DAY"),
+        },
+      },
+      group: ["category_id"],
+      order: [[Sequelize.literal("popularity"), "DESC"]],
+      limit: 5,
+      include: [
+        {
+          model: Category,
+          attributes: ["category_name"],
+        },
+      ],
+    });
+    res.status(200).json(popularCategories);
+  } catch (e) {
+    next(e);
+  }
+};
+module.exports = {
+  FetchCategories,
+  FetchSkills,
+  FetchAllSkils,
+  fetchPopularCategories,
+};

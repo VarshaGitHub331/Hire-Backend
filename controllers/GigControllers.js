@@ -309,7 +309,7 @@ const FetchAllGigs = async (req, res, next) => {
       });
       const freelancer = await User.findOne({
         where: { user_id: gig["Freelancer_Gig.user_id"] },
-        attributes: ["first_name"],
+        attributes: ["first_name", "profilePic"],
         raw: true,
       });
       const freelancerRating = await Freelancer_Ratings.findOne({
@@ -325,6 +325,7 @@ const FetchAllGigs = async (req, res, next) => {
       gig.category_name = categoryName.category_name;
       gig.skills_names = skillResult[0]["Skills.skill_names"];
       gig.freelancer_name = freelancer?.first_name;
+      gig.profilePic = freelancer?.profilePic;
       gig.freelancer_rating =
         freelancerRating?.total_rating / freelancerRating?.rating_count;
       gig.freelancer_id = gig["Freelancer_Gig.user_id"];
@@ -396,7 +397,7 @@ const fetchTopRatedGigs = async (req, res) => {
                   },
                   {
                     model: User,
-                    attributes: ["first_name"],
+                    attributes: ["first_name", "profilePic"],
                   },
                 ],
               },
@@ -418,6 +419,7 @@ const fetchTopRatedGigs = async (req, res) => {
         gigImage: gig.Gig.picture[0],
         category_name: gig.Category.category_name,
         freelancer_name: gig.Gig.Freelancer_Gig.User.first_name,
+        profile_pic: gig.Gig.Freelancer_Gig.User.profilePic,
         total_rating:
           gig.Gig.Freelancer_Gig.Freelancer.Freelancer_Rating?.total_rating ||
           0,
@@ -433,7 +435,7 @@ const fetchTopRatedGigs = async (req, res) => {
       gigResults.push(topRatedGig);
     }
 
-    res.status(200).json(gigResults);
+    res.status(200).json(gigResults.slice(0, 5));
   } catch (error) {
     console.error("Error fetching top-rated gigs:", error);
     res.status(500).json({

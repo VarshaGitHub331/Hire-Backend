@@ -20,21 +20,26 @@ const {
   createOrderTimeline,
 } = require("../controllers/OrderController");
 const { generateTimeLine } = require("../controllers/AIControllers");
-OrderRouter.post("/createOrderForGig", WrapAsync(createOrderForGig));
-OrderRouter.get("/acceptOrder/:orderId", WrapAsync(acceptOrder));
-OrderRouter.get("/rejectOrder/:orderId", WrapAsync(RejectOrder));
-OrderRouter.post("/completeOrder", WrapAsync(completeOrder));
-OrderRouter.patch("/updateBid", WrapAsync(bidUpdate));
-OrderRouter.post("/fetchClientOrders", WrapAsync(fetchClientOrders));
-OrderRouter.post("/fetchFreelancerOrders", WrapAsync(fetchFreelancerOrders));
-OrderRouter.put("/edit", WrapAsync(EditOrder));
-OrderRouter.get("/getOrder/:orderId", WrapAsync(getOrder));
-OrderRouter.post("/addTask", WrapAsync(AddTask));
-OrderRouter.get("/getTasks/:orderId", WrapAsync(getTasks));
-OrderRouter.post("/completeTask", WrapAsync(CompleteTask));
-OrderRouter.post("/updateTask", WrapAsync(updateDescription));
+OrderRouter.post("/createOrderForGig", AuthUser, WrapAsync(createOrderForGig));
+OrderRouter.get("/acceptOrder/:orderId", AuthUser, WrapAsync(acceptOrder));
+OrderRouter.get("/rejectOrder/:orderId", AuthUser, WrapAsync(RejectOrder));
+OrderRouter.post("/completeOrder", AuthUser, WrapAsync(completeOrder));
+OrderRouter.patch("/updateBid", AuthUser, WrapAsync(bidUpdate));
+OrderRouter.post("/fetchClientOrders", AuthUser, WrapAsync(fetchClientOrders));
+OrderRouter.post(
+  "/fetchFreelancerOrders",
+  AuthUser,
+  WrapAsync(fetchFreelancerOrders)
+);
+OrderRouter.put("/edit", AuthUser, WrapAsync(EditOrder));
+OrderRouter.get("/getOrder/:orderId", AuthUser, WrapAsync(getOrder));
+OrderRouter.post("/addTask", AuthUser, WrapAsync(AddTask));
+OrderRouter.get("/getTasks/:orderId", AuthUser, WrapAsync(getTasks));
+OrderRouter.post("/completeTask", AuthUser, WrapAsync(CompleteTask));
+OrderRouter.post("/updateTask", AuthUser, WrapAsync(updateDescription));
 OrderRouter.post(
   "/generateAITimeline",
+  AuthUser,
   WrapAsync(generateTimeLine),
   WrapAsync(createOrderTimeline)
 );

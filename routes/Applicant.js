@@ -12,18 +12,24 @@ const WrapAsync = require("../utils/WrapAsync");
 const { AuthUser } = require("../controllers/UserController");
 const ApplicantRouter = express.Router();
 
-ApplicantRouter.post("/becomeApplicant", WrapAsync(becomeApplicant));
-ApplicantRouter.post("/generateAIProposal", WrapAsync(generateAIProposal));
-ApplicantRouter.get("/getApplicants", WrapAsync(getApplicants));
+ApplicantRouter.post("/becomeApplicant", AuthUser, WrapAsync(becomeApplicant));
+ApplicantRouter.post(
+  "/generateAIProposal",
+  AuthUser,
+  WrapAsync(generateAIProposal)
+);
+ApplicantRouter.get("/getApplicants", AuthUser, WrapAsync(getApplicants));
 ApplicantRouter.patch(
   "/acceptProposal",
+  AuthUser,
   WrapAsync(acceptProposal),
   WrapAsync(sendConfirmationMails)
 );
 ApplicantRouter.patch(
   "/rejectProposal",
+  AuthUser,
   WrapAsync(rejectProposal),
   WrapAsync(sendConfirmationMails)
 );
-ApplicantRouter.get("/myProposals", WrapAsync(ViewProposals));
+ApplicantRouter.get("/myProposals", AuthUser, WrapAsync(ViewProposals));
 module.exports = ApplicantRouter;

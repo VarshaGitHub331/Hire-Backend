@@ -20,20 +20,34 @@ const ClientRouter = express.Router();
 
 ClientRouter.post(
   "/getSkillsForPosting",
+  AuthUser,
   WrapAsync(extractSkillsFromPosting),
   WrapAsync(findSimilarSkills)
 );
 ClientRouter.post(
   "/createPosting",
+  AuthUser,
   WrapAsync(CreatePosting),
   WrapAsync(PostingSkills),
   WrapAsync(PostingCategory)
 );
-ClientRouter.get("/getJobPostings", WrapAsync(getJobPostings));
+ClientRouter.get("/getJobPostings", AuthUser, WrapAsync(getJobPostings));
 
 ClientRouter.post("/updateProfile", AuthUser, WrapAsync(UpdateClientProfile));
-ClientRouter.patch("/removePosting/:job_id", WrapAsync(RemovePosting));
-ClientRouter.post("/editPosting", WrapAsync(editPosting));
-ClientRouter.get("/getClientRatingsGrowth", WrapAsync(getClientRatingsGrowth));
-ClientRouter.get("/getClientOrdersGrowth", WrapAsync(getClientOrdersGrowth));
+ClientRouter.patch(
+  "/removePosting/:job_id",
+  AuthUser,
+  WrapAsync(RemovePosting)
+);
+ClientRouter.post("/editPosting", AuthUser, WrapAsync(editPosting));
+ClientRouter.get(
+  "/getClientRatingsGrowth",
+  AuthUser,
+  WrapAsync(getClientRatingsGrowth)
+);
+ClientRouter.get(
+  "/getClientOrdersGrowth",
+  AuthUser,
+  WrapAsync(getClientOrdersGrowth)
+);
 module.exports = ClientRouter;

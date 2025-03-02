@@ -57,7 +57,7 @@ const RegisterUser = async (req, res, next) => {
       role: newUser.role,
     };
     const SECRET_KEY = process.env.JWT_SECRET;
-    const token = jwt.sign(user, SECRET_KEY, { expiresIn: "1h" });
+    const token = jwt.sign(user, SECRET_KEY, { expiresIn: "1d" });
     res.status(200).json(token);
   } catch (e) {
     next(e);
@@ -78,6 +78,7 @@ const LoginUser = async (req, res, next) => {
         "last_name",
         "password",
         "role",
+        "profilePic",
         "created_at",
         "updated_at",
       ],
@@ -94,7 +95,12 @@ const LoginUser = async (req, res, next) => {
     if (isValid) {
       // Generate JWT token
       const token = jwt.sign(
-        { user_id: user.user_id, user_name: user.first_name, role: user.role },
+        {
+          user_id: user.user_id,
+          user_name: user.first_name,
+          role: user.role,
+          profilePic: user.profilePic,
+        },
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
       );

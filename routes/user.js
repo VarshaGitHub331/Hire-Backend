@@ -9,6 +9,7 @@ const {
   LoginUser,
   FetchProfile,
   updateUserProfile,
+  AuthUser,
 } = require("../controllers/UserController.js");
 const { User } = require("../utils/InitializeModels.js");
 
@@ -16,6 +17,7 @@ UserRouter.post("/createAccount", WrapAsync(RegisterUser));
 UserRouter.post("/login", WrapAsync(LoginUser));
 UserRouter.post(
   "/uploadPicture",
+  AuthUser,
   upload.single("picture"),
   uploadProfilePicture,
   async (req, res, next) => {
@@ -29,11 +31,12 @@ UserRouter.post(
           },
         }
       );
+      res.status(200).json(req.profileUrl);
     } catch (e) {
       next(e);
     }
   }
 );
-UserRouter.get("/fetchProfile", WrapAsync(FetchProfile));
-UserRouter.post("/updateUserProfile", WrapAsync(updateUserProfile));
+UserRouter.get("/fetchProfile", AuthUser, WrapAsync(FetchProfile));
+UserRouter.post("/updateUserProfile", AuthUser, WrapAsync(updateUserProfile));
 module.exports = UserRouter;

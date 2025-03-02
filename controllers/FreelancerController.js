@@ -349,8 +349,9 @@ const profileUserWithAI = async (req, res, next) => {
     const resumeText = data.text;
 
     // Extract skills using AI
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const prompt = `Extract all relevant skills from the following resume:\n${resumeText}`;
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    const prompt = `Extract all relevant skills from the following resume:\n${resumeText},donot hallucinate any skill.`;
 
     const aiResponse = await model.generateContent(prompt);
 
@@ -377,6 +378,7 @@ const profileUserWithAI = async (req, res, next) => {
       .filter((skill) => skill && !skill.includes("Skills:")); // Remove section headers
 
     req.body.extractedSkills = extractedSkills;
+    console.log(req.body.extractedSkills);
     next();
   } catch (e) {
     console.error("Error extracting skills:", e.message);
@@ -453,7 +455,7 @@ const mapResumeSkills = async (req, res, next) => {
   res.status(201).json("Profiled User");
 };
 const updateCategories = async (req, res) => {
-  console.log("Called here to updte categories");
+  console.log("Called here to update categories");
   try {
     const { user_id, freelancerCategories } = req.body;
 
@@ -468,7 +470,7 @@ const updateCategories = async (req, res) => {
     await Freelancer_Category.destroy({
       where: {
         user_id,
-        category_id: { [Sequelize.Op.notIn]: categoryIds }, // Delete categories NOT in the new list
+        category_id: { [Sequelize.Op.notIn]: categoryIds },
       },
     });
 
@@ -476,7 +478,7 @@ const updateCategories = async (req, res) => {
     const existingCategories = await Freelancer_Category.findAll({
       where: {
         user_id,
-        category_id: { [Sequelize.Op.in]: categoryIds }, // Keep categories already in the list
+        category_id: { [Sequelize.Op.in]: categoryIds },
       },
     });
 
@@ -493,14 +495,15 @@ const updateCategories = async (req, res) => {
       await Freelancer_Category.bulkCreate(newCategories);
     }
 
+    // Send response once all operations are complete
     return res
       .status(200)
       .json({ message: "Categories updated successfully!" });
   } catch (error) {
     console.error("Error updating categories:", error);
-    return res.status(500).json({ error: "Internal server error" });
   }
 };
+
 const updateSkills = async (req, res) => {
   console.log("Called here to update skills");
   try {
@@ -517,7 +520,7 @@ const updateSkills = async (req, res) => {
     await Freelancer_Skills.destroy({
       where: {
         user_id,
-        skill_id: { [Sequelize.Op.notIn]: skillIds }, // Delete skills NOT in the new list
+        skill_id: { [Sequelize.Op.notIn]: skillIds },
       },
     });
 
@@ -525,7 +528,7 @@ const updateSkills = async (req, res) => {
     const existingSkills = await Freelancer_Skills.findAll({
       where: {
         user_id,
-        skill_id: { [Sequelize.Op.in]: skillIds }, // Keep skills already in the list
+        skill_id: { [Sequelize.Op.in]: skillIds },
       },
     });
 
@@ -534,18 +537,21 @@ const updateSkills = async (req, res) => {
     // Step 3: Insert only new skills that are not already present
     const newSkills = skillIds
       .filter((skill_id) => !existingSkillIds.includes(skill_id))
-      .map((skill_id) => ({ user_id, skill_id: skill_id }));
+      .map((skill_id) => ({ user_id, skill_id }));
 
     if (newSkills.length > 0) {
       await Freelancer_Skills.bulkCreate(newSkills);
     }
+
     console.log("DONE UPDATING SKILLS FOR FREELANCER");
+    // Return the response after all async operations are complete
     return res.status(200).json({ message: "Skills updated successfully!" });
   } catch (error) {
     console.error("Error updating skills:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    // Make sure to return here to stop further execution
   }
 };
+
 const getFreelancerRatingsGrowth = async (req, res, next) => {
   const { user_id } = req.query;
   try {
@@ -807,5 +813,4 @@ module.exports = {
   JobsForFreelancer,
   fetchFreelancerProfile,
   fetchFreelancerReviews,
- 
 };
