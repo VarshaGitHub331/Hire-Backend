@@ -9,6 +9,7 @@ const {
 } = require("../utils/InitializeModels.js");
 const { sendMail } = require("../utils/Mail.js");
 const { Sequelize } = require("../models");
+const { sendNotification } = require("../utils/redisPublisher.js");
 console.log("Checking modles From ORDER");
 console.log(Job_Postings);
 console.log(User);
@@ -35,6 +36,10 @@ const createOrderForGig = async (req, res, next) => {
     where: { user_id: user_id },
     raw: true,
   });
+  await sendNotification(
+    freelancer_id,
+    `You have a new order request from ${client.first_name} for gig ${gig_id}`
+  );
   sendMail(
     freelancer.email,
     order.order_id,

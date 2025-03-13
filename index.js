@@ -4,7 +4,7 @@ const http = require("http");
 const cors = require("cors");
 const app = express();
 const server = http.createServer(app);
-
+const { subscriber } = require("./utils/redisClient.js");
 // Set up Socket.IO with CORS support for cross-origin requests
 const io = require("socket.io")(server, {
   cors: {
@@ -14,9 +14,30 @@ const io = require("socket.io")(server, {
     credentials: true,
   },
 });
-
 io.on("connection", (socket) => {
   console.log("A client connected:", socket.id);
+
+  socket.on("register", async (userId) => {
+    console.log(`Registering user for notifications: ${userId}`);
+
+    const channel = `notifications:${userId}`;
+
+    // Ensure we don’t add duplicate listeners for the same socket
+    subscriber.unsubscribe(channel);
+
+    // Subscribe again
+    await subscriber.subscribe(channel, (message) => {
+      console.log(`📩 Sending notification to ${userId}: ${message}`);
+      socket.emit("notification", message);
+    });
+
+    console.log(`✅ Subscribed to ${channel} for user: ${userId}`);
+  });
+
+  // Handle disconnection
+  socket.on("disconnect", () => {
+    console.log(`❌ Client disconnected: ${socket.id}`);
+  });
 });
 
 console.log("Socket.IO server is running on port 3001");
