@@ -380,6 +380,41 @@ const profileUserWithAI = async (req, res, next) => {
 
     req.body.extractedSkills = extractedSkills;
     console.log(req.body.extractedSkills);
+    const bioPrompt = `
+You are an expert at crafting professional freelancer profiles. Based on the resume text below, generate a compelling "About" section that highlights the freelancer's key skills, experience, and strengths.
+
+### **Guidelines:**
+- **Length:** Keep it between 50-100 words.
+- **Skills:** Only mention skills explicitly stated in the resume (do not hallucinate).
+- **Experience:** Summarize relevant projects, work experience, or achievements concisely.
+- **Tone:** Use a confident, engaging, and professional tone.
+- **Soft Skills:** If teamwork, leadership, or communication skills are mentioned, integrate them naturally.
+- **Ending:** Conclude with a strong closing statement that makes the profile appealing to potential clients.
+
+### **Resume Text:**
+${resumeText}
+
+Now, generate a polished and compelling "About" section for the freelancer's profile.
+`;
+
+    const aiBioResponse = await model.generateContent(bioPrompt);
+
+    // ✅ Log entire AI response for debugging
+    console.log("AI Bio Response:", JSON.stringify(aiBioResponse, null, 2));
+
+    // ✅ Ensure correct path to skills
+    const bioCandidates = aiBioResponse?.response?.candidates;
+    if (!candidates || candidates.length === 0) {
+      throw new Error("No candidates returned from AI model");
+    }
+
+    const bioContentParts = bioCandidates[0]?.content?.parts;
+    if (!contentParts || contentParts.length === 0) {
+      throw new Error("AI response has no content parts");
+    }
+
+    const extractedBioText = bioContentParts[0].text;
+    req.body.bioText = extractedBioText;
     next();
   } catch (e) {
     console.error("Error extracting skills:", e.message);
@@ -452,6 +487,10 @@ const mapResumeSkills = async (req, res, next) => {
       });
     }
   }
+  await Freelancer.update(
+    { profile: req.body.bioText },
+    { where: { user_id } }
+  );
 
   res.status(201).json("Profiled User");
 };
