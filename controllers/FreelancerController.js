@@ -23,7 +23,8 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const fs = require("fs");
 const pdfParse = require("pdf-parse");
 const axios = require("axios");
-
+const crypto = require("crypto");
+const { cacher } = require("../utils/redisClient");
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const { raw } = require("mysql2");
@@ -637,7 +638,18 @@ const JobsForFreelancer = async (req, res, next) => {
     });
 
     const freelancerSkillIds = freelancerSkills.map((skill) => skill.skill_id);
+    const skillHash = crypto
+      .createHash("md5")
+      .update(freelancerSkillIds.sort().join(",")) // Sorted for consistency
+      .digest("hex");
+    const cacheKey = `jobs:skills:${skillHash}:page:${pageNumber}:limit:${limitNumber}`;
 
+    // Check Redis cache
+    const cachedData = await cacher.get(cacheKey);
+    if (cachedData) {
+      console.log("Serving jobs from Cache");
+      return res.status(200).json(JSON.parse(cachedData));
+    }
     let jobs;
     if (freelancerSkillIds.length == 0) {
       // Freelancer has no skills, return all jobs
@@ -681,6 +693,10 @@ const JobsForFreelancer = async (req, res, next) => {
       });
     }
     console.log("The jobs are ", jobs);
+    // Store response in cache
+    await cacher.set(cacheKey, JSON.stringify(jobs), "EX", 3600);
+
+    console.log("Data Cached & Sent");
     res.status(200).json(jobs);
   } catch (error) {
     next(error);

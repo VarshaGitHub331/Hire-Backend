@@ -13,7 +13,7 @@ const {
   Freelancer,
 } = require("../utils/InitializeModels");
 const { Sequelize } = require("../models");
-
+const { cacher } = require("../utils/redisClient");
 const FetchGigs = async (req, res, next) => {
   console.log(req.query);
   const { user_id, page, limit } = req.query;
@@ -245,8 +245,17 @@ const FetchAllGigs = async (req, res, next) => {
   const { extracted_categories, extracted_budget } = req.body;
   console.log("eXTRACTED CATS", extracted_categories);
   const results = [];
-
+  const cacheKey = `gigs:page=${pageNumber}:limit=${limitNumber}`;
   try {
+    const cachedAllGigs = await cacher.get(cacheKey);
+    if (cachedAllGigs) {
+      console.log("IT IS A HITTTTT FOR ALL GIGS");
+      return res.status(200).json({
+        results: JSON.parse(cachedAllGigs),
+        extracted_categories,
+        extracted_budget,
+      });
+    }
     const gigResults = await Gigs.findAll({
       include: [
         {
@@ -331,7 +340,7 @@ const FetchAllGigs = async (req, res, next) => {
       gig.freelancer_id = gig["Freelancer_Gig.user_id"];
       results.push(gig);
     }
-
+    await cacher.setEx(cacheKey, 3600, JSON.stringify(results));
     res.status(200).json({ results, extracted_categories, extracted_budget });
   } catch (e) {
     next(e); // Pass any error to the next middleware
@@ -369,6 +378,10 @@ const EditFeauturesBudget = async (req, res, next) => {
 };
 const fetchTopRatedGigs = async (req, res) => {
   try {
+    const cachedTopRatedGigs = await cacher.get("top_rated_gigs");
+    if (cachedTopRatedGigs) {
+      return res.status(200).json(JSON.parse(cachedTopRatedGigs));
+    }
     const gigResults = [];
     const categories = await Category.findAll({
       attributes: ["category_id"],
@@ -434,7 +447,11 @@ const fetchTopRatedGigs = async (req, res) => {
       }, null);
       gigResults.push(topRatedGig);
     }
-
+    await cacher.setEx(
+      "top_rated_gigs",
+      3600,
+      JSON.stringify(gigResults.slice(0, 5))
+    );
     res.status(200).json(gigResults.slice(0, 5));
   } catch (error) {
     console.error("Error fetching top-rated gigs:", error);

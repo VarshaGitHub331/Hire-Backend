@@ -7,13 +7,18 @@ const publisher = redis.createClient({
 const subscriber = redis.createClient({
   socket: { host: "localhost", port: 6379 },
 });
-
+const cacher = redis.createClient({
+  socket: { host: "localhost", port: 6379 },
+});
 (async () => {
   await publisher.connect();
   console.log("📡 Redis Publisher Connected");
 
   await subscriber.connect();
   console.log("🔔 Redis Subscriber Connected");
+
+  await cacher.connect();
+  console.log("📦 Redis Cacher Connected");
 })();
 
-module.exports = { publisher, subscriber };
+module.exports = { publisher, subscriber, cacher };

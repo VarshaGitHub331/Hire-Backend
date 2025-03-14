@@ -6,6 +6,7 @@ const {
   Job_Postings,
 } = require("../utils/InitializeModels");
 const { sendProposalConfirmationMail } = require("../utils/Mail");
+const { sendNotification } = require("../utils/redisPublisher");
 const becomeApplicant = async (req, res, next) => {
   try {
     console.log(req.body);
@@ -44,7 +45,10 @@ const becomeApplicant = async (req, res, next) => {
       estimated_time,
       bid_status: "pending",
     });
-
+    sendNotification(
+      job.user_id,
+      `You have a new applicant for your posting ${job.title}`
+    );
     res.status(200).json(newBid);
   } catch (error) {
     console.error("Error in becomeApplicant:", error);
@@ -190,7 +194,7 @@ const sendConfirmationMails = async (req, res, next) => {
     } else {
       text = `Sorry, your proposal for the posting "${job_posting.title}" has been rejected by ${user.first_name}.`;
     }
-
+    await sendNotification(applicant_id, text);
     // Send the confirmation email
     await sendProposalConfirmationMail(
       bidder.email,
