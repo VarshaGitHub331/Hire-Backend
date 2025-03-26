@@ -3,7 +3,7 @@ const sequelize = new Sequelize({
   database: "hire",
   username: "root",
   password: "Varsha@SQL123",
-  host: "localhost",
+  host: "host.docker.internal",
   dialect: "mysql",
 });
 sequelize

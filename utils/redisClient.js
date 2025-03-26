@@ -1,14 +1,14 @@
 const redis = require("redis");
 
 const publisher = redis.createClient({
-  socket: { host: "localhost", port: 6379 }, // Update host if using Docker
+  socket: { host: "myredis", port: 6379 }, // Update host if using Docker
 });
 
 const subscriber = redis.createClient({
-  socket: { host: "localhost", port: 6379 },
+  socket: { host: "myredis", port: 6379 },
 });
 const cacher = redis.createClient({
-  socket: { host: "localhost", port: 6379 },
+  socket: { host: "myredis", port: 6379 },
 });
 (async () => {
   await publisher.connect();
